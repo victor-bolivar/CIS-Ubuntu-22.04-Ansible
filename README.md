@@ -1,6 +1,4 @@
-<div align="center">
-  <img src="https://raw.githubusercontent.com/alivx/CIS-Ubuntu-22.04-Ansible/master/files/header.png">
-</div>
+
 
 
 Ansible CIS Ubuntu 22.04 LTS Hardening V1.1.0 Latest [![Build Status](https://travis-ci.com/alivx/CIS-Ubuntu-22.04-Ansible.svg?branch=master)](https://travis-ci.com/alivx/CIS-Ubuntu-22.04-Ansible)
