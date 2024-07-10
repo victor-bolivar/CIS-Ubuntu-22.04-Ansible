@@ -1,32 +1,123 @@
 ---
-# handlers file for Auto-CIS-Ubuntu-Linux-20.04-LTS-Remediation
-#sshd
-#Grub
-- name: grub restart
-  command: update-grub
-- name: journald restart
-  service:
+
+- name: Writing the tmp file | tmp_systemd
+  template:
+    src: etc/systemd/system/tmp.mount.j2
+    dest: /etc/systemd/system/tmp.mount
+    owner: root
+    group: root
+    mode: '0644'
+  with_items:
+  - "{{ ansible_facts.mounts }}"
+  loop_control:
+    label: "{{ item.device }}"
+  when:
+  - "'/tmp' in mount_names"
+  - item.mount == "/tmp"
+  - tmp_mnt_type == 'tmp_systemd'
+  listen: Writing and remounting tmp
+
+- name: Writing the tmp file | fstab
+  ansible.posix.mount:
+    path: /tmp
+    src: "{{ item.device }}"
+    state: present
+    fstype: "{{ item.fstype }}"
+    opts: defaults,{{ tmp_partition_mount_options | unique | join(',') }}
+  with_items:
+  - "{{ ansible_facts.mounts }}"
+  loop_control:
+    label: "{{ item.device }}"
+  when:
+  - "'/tmp' in mount_names"
+  - tmp_mnt_type == 'fstab'
+  - item.mount == "/tmp"
+  listen: Writing and remounting tmp
+
+- name: Update_Initramfs
+  shell: update-initramfs -u
+  notify: set_reboot_required
+
+- name: Grub update
+  shell: update-grub
+  failed_when: false
+  notify: set_reboot_required
+
+- name: Restart timeservice
+  systemd:
+    name: "{{ cis_time_sync_tool }}"
+    state: restarted
+
+- name: Reload systemctl
+  systemd:
+    daemon_reload: true
+
+- name: Update dconf
+  shell: dconf update
+  failed_when: false
+
+- name: Restart journald
+  systemd:
     name: systemd-journald
     state: restarted
-- name: auditd restart
-  service:
-    name: auditd
-    state: restarted
-- name: audit rules load
-  shell: /sbin/augenrules --load && true || true
-- name: sshd restart
-  service:
+
+- name: Flush ipv4 route table
+  ansible.posix.sysctl:
+    name: net.ipv4.route.flush
+    value: '1'
+    sysctl_set: true
+  when: ansible_facts.virtualization_type != "docker"
+
+- name: Flush ipv6 route table
+  ansible.posix.sysctl:
+    name: net.ipv6.route.flush
+    value: '1'
+    sysctl_set: true
+  when:
+  - ansible_facts.virtualization_type != "docker"
+  - cis_ipv6_required
+
+- name: Reload ufw
+  community.general.ufw:
+    state: reloaded
+
+- name: Iptables persistent
+  shell: bash -c "iptables-save > /etc/iptables/rules.v4"
+  changed_when: cis_iptables_save.rc == 0
+  failed_when: cis_iptables_save.rc > 0
+  register: cis_iptables_save
+
+- name: Ip6tables persistent
+  shell: bash -c "ip6tables-save > /etc/iptables/rules.v6"
+  changed_when: cis_ip6tables_save.rc == 0
+  failed_when: cis_ip6tables_save.rc > 0
+  register: cis_ip6tables_save
+
+- name: Auditd rules reload
+  shell: augenrules --load
+  when:
+  - not auditd_immutable_check or '"No change" not in cis_rule_4_1_3_21_augen_check.stdout'
+
+- name: Audit_immutable_fact
+  debug:
+    msg: "Reboot required for auditd to apply new rules as immutable set"
+  notify: set_reboot_required
+  when:
+  - audit_rules_updated.changed
+  - auditd_immutable_check is defined
+
+- name: Restart auditd
+  shell: service auditd restart
+  when:
+  - audit_rules_updated is defined
+  tags:
+  - skip_ansible_lint
+
+- name: Restart sshd
+  systemd:
     name: sshd
     state: restarted
-- name: rsyslog restart
-  service:
-    name: rsyslog
-    state: restarted
-- name: RestartChronyservice
-  service:
-    name: "chrony"
-    state: restarted
-- name:  reloadTimesyncd
-  service:
-    name:  systemd-timesyncd
-    state: restarted
+
+- name: set_reboot_required
+  set_fact:
+    change_requires_reboot: true
