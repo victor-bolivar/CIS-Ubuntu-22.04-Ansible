@@ -53,7 +53,7 @@ cis_dovecot_server: false
 cis_smb_server: false
 cis_squid_server: false
 cis_snmp_server: false
-cis_rsync_server: mask  # Can be set to true, mask or remove depending on requirements
+cis_rsync_server: false
 cis_nis_server: false
 cis_nfs_client: false
 
@@ -179,6 +179,8 @@ cis_screensaver_lock_delay: 5
 ## Section 2 Control Variables
 ##
 
+remove_NFS: true
+
 ## Control 2.3.1.1
 # This variable choses the tool used for time synchronization
 # The three options are `chrony`, `ntp`, and `systemd-timesyncd`.
@@ -236,13 +238,10 @@ cis_save_iptables_cis_rules: false
 # settings. If set to "true" the task will get done in the prelim section of the role.
 cis_ufw_use_sysctl: true
 ## Control 4.1.x - Ensure ufw outbound connections are configured
-# The value of this variable represents the ports for the firewall to allow oubound traffic from.
-# If you want to allow outbound traffic on all ports, set the variable to  `all`, e.g.,
-# `cis_ufw_allow_out_ports: "all"`.
-cis_ufw_allow_out_ports:
-- 53
-- 80
-- 443
+firewall_list_of_ports_to_allow:
+# SSHD
+- { rule: "allow", port: "22", proto: "tcp" }
+firewall_allow_keep_alive: true
 
 ## Controls 4.2.x - nftables
 # Nftables is not supported in this role. Some tasks have parts of them commented out, this is one example
@@ -280,6 +279,7 @@ cis_sshd_default_max_sessions: 8
 cis_sshd_default_login_grace_time: 60
 cis_sshd_default_client_alive_interval: 300
 cis_sshd_default_client_alive_count_max: 3
+cis_sshd_max_startups: "10:30:60"
 cis_sshd:
   # This variable is used to control the verbosity of the logging produced by the SSH server.
   # The options for setting it are as follows:
@@ -416,6 +416,14 @@ cis_pass:
   # This variable specifies the number of days of inactivity before an account will be locked.
   # CIS requires a value of 30 days or less.
   inactive: 30
+# The changes above are set configure via two methods: /etc/login.defs and the chage command.
+# For the latter scenario, by default, the changes above will be applied to all users within
+# the /etc/shadow. If you want it to only be applied for a specific list of users, use the
+# following variable:
+#
+# chage_list_of_users:
+# - root
+# - ubuntu
 
 ## Control 5.4.3.3 - Default user mask
 # The following variable specifies the "umask" to set in the `/etc/bash.bashrc` and `/etc/profile`.
@@ -597,6 +605,7 @@ cis_unowned_owner: root
 # for all unowned files and directories.
 # Possible values are `true` and `false`.
 cis_no_owner_adjust: true
+cis_ungrouped_items_whitelist: []
 # This variable represents the group that will be set for files without group.
 cis_ungrouped_group: root
 # This variable is a toggle for enabling/disabling the automated
@@ -604,16 +613,19 @@ cis_ungrouped_group: root
 # for all group-less files and directories.
 # Possible values are `true` and `false`.
 cis_no_group_adjust: true
+cis_unowned_items_whitelist: []
 
 ## Control 7.1.13
 # This variable is a toggle for enabling/disabling the automated removal
 # of the SUID bit from all files on all mounts.
 # Possible values are `true` and `false`.
 cis_suid_adjust: false
+cis_suid_whitelist: []
 # This variable is a toggle for enabling/disabling the automated removal the SGID
 # bit from all files on all mounts
 # Possible values are `true` and `false`.
 cis_sgid_adjust: false
+cis_sgid_whitelist: []
 
 ## Control 7.2.10
 # This variable is a toggle foe enabling/disabling the automated modification of

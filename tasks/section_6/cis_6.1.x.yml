@@ -16,6 +16,22 @@
       manager: auto
     when: aide_added.skipped is not defined
 
+  - name: 6.1.1 | Ensure AIDE is installed | Simplify AIDE checksums
+    lineinfile:
+      regexp: '^Checksums.*='
+      line: "Checksums = {{ aide_checksums }}"
+      path: "/etc/aide/aide.conf"
+      state: present
+    when: (aide_checksums is defined) and (aide_checksums| length > 0)
+
+  - name: 6.1.1 | Ensure AIDE is installed | Add extra AIDE exclude paths
+    lineinfile:
+      line: "{{ item }}"
+      path: "/etc/aide/aide.conf.d/00_local_excludes"
+      state: present
+    loop: "{{ aide_exclude_paths }}"
+    when: (aide_exclude_paths is defined) and (aide_exclude_paths| length > 0)
+
   - name: "6.1.1 | Ensure AIDE is installed | Check if AIDE database already exists"
     stat:
       path: /var/lib/aide/aide.db

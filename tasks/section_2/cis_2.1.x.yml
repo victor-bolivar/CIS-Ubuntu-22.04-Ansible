@@ -274,6 +274,8 @@
       name: nfs-kernel-server
       state: absent
       purge: "{{ cis_purge_apt }}"
+  when:
+  - remove_NFS 
   tags:
   - level1-server
   - level2-workstation
@@ -409,6 +411,8 @@
       name: rsync
       state: absent
       purge: "{{ cis_purge_apt }}"
+  when:
+  - not cis_rsync_server
   tags:
   - level1-server
   - level2-workstation

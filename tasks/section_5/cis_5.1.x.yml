@@ -338,7 +338,7 @@
   lineinfile:
     path: /etc/ssh/sshd_config
     regexp: '^MaxStartups|^#MaxStartups'
-    line: 'MaxStartups 10:30:60'
+    line: "MaxStartups {{ cis_sshd_max_startups }}"
     validate: 'sshd -t -f %s'
   notify: Restart sshd
   tags:
@@ -365,11 +365,23 @@
   - ssh
 
 - name: "5.1.20 | Ensure sshd PermitRootLogin is disabled"
-  lineinfile:
-    path: /etc/ssh/sshd_config
-    regexp: '^PermitRootLogin|^#PermitRootLogin'
-    line: 'PermitRootLogin no'
-    validate: 'sshd -t -f %s'
+  block:
+  - name: "5.1.20 | Ensure sshd PermitRootLogin is disabled | Set default"
+    lineinfile:
+      state: present
+      dest: /etc/ssh/sshd_config
+      regexp: "^PermitRootLogin .*"
+      line: "PermitRootLogin no"
+  - name: "5.1.20 | Ensure sshd PermitRootLogin is disabled | Remove root login for all existing IPs"
+    replace:
+      dest: /etc/ssh/sshd_config
+      regexp: "^[Mm]atch [Aa]ddress.*\n[ ]*PermitRootLogin.*(\n[Mm]atch [Aa]ll[ ]*)?\n"
+  - name: "5.1.20 | Ensure sshd PermitRootLogin is disabled | Allow ssh root login from '{{ cis_ssh_root_login_ips }}'"
+    lineinfile:
+      state: present
+      dest: /etc/ssh/sshd_config
+      line: "Match Address {{ cis_ssh_root_login_ips }}\n  PermitRootLogin yes\nMatch All"
+    when: (cis_ssh_root_login_ips != "None") and (cis_ssh_root_login_ips|length > 0)
   notify: Restart sshd
   tags:
   - level1-server

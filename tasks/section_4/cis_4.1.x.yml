@@ -91,23 +91,41 @@
   - ufw
 
 - name: "4.1.5 | Ensure ufw outbound connections are configured"
-  block:
-  - name: "4.1.5 | Ensure ufw outbound connections are configured | Custom ports"
-    community.general.ufw:
+  block:  
+  - name: 4.1.5 | Ensure ufw outbound connections are configured | ssh
+    ufw:
       rule: allow
-      direction: out
-      to_port: '{{ item }}'
-    with_items:
-    - "{{ cis_ufw_allow_out_ports }}"
-    notify: Reload ufw
-    when: cis_ufw_allow_out_ports != "all"
+      proto: tcp
+      port: "22"
 
-  - name: "4.1.5 | Ensure ufw outbound connections are configured | Allow all"
-    community.general.ufw:
+  - name: 4.1.5 | Ensure ufw outbound connections are configured | dns
+    ufw:
       rule: allow
-      direction: out
-    notify: Reload ufw
-    when: "'all' in cis_ufw_allow_out_ports"
+      proto: "{{ item }}"
+      port: "53"
+    loop:
+      - tcp
+      - udp
+
+  - name: 4.1.5 | Ensure ufw outbound connections are configured | defined ports
+    ufw:
+      rule: "{{ item.rule }}"
+      port: "{{ item.port }}"
+      proto: "{{ item.proto }}"
+    with_items: "{{ firewall_list_of_ports_to_allow }}"
+
+  - name: 4.1.5 | Ensure ufw outbound connections are configured | keep_alived (1)
+    ufw:
+      # note: Ansible doesn't support "proto: vrrp"
+      rule: allow
+      from_ip: 224.0.0.18
+    when: firewall_allow_keep_alive
+  - name: 4.1.5 | Ensure ufw outbound connections are configured | keep_alived (2)
+    ufw:
+      # note: Ansible doesn't support "proto: vrrp"
+      rule: allow
+      to_ip: 224.0.0.18
+    when: firewall_allow_keep_alive
   tags:
   - level1-server
   - level1-workstation
