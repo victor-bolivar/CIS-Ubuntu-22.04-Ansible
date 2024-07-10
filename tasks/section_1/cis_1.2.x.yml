@@ -1,0 +1,79 @@
+---
+
+- name: "1.2.1.1 | Ensure GPG keys are configured"
+  block:
+  - name: "1.2.1.1 | Ensure GPG keys are configured | Get apt gpg keys"
+    shell: apt-key list
+    changed_when: false
+    failed_when: false
+    check_mode: false
+    register: apt_gpgkeys
+
+  - name: "1.2.1.1 | Ensure GPG keys are configured | Message out apt gpg keys"
+    debug:
+      msg:
+      - "Warning!! Below are the apt gpg keys configured"
+      - "Please review to make sure they are configured"
+      - "in accordance with site policy"
+      - "{{ apt_gpgkeys.stdout_lines }}"
+
+  - name: "1.2.1.1 | Ensure GPG keys are configured | warn_count"
+    import_tasks:
+      file: warning_facts.yml
+  vars:
+    warn_control_id: '1.2.1.1'
+  tags:
+  - level1-server
+  - level1-workstation
+  - manual
+  - audit
+  - 1.2.1.1
+  - gpg
+  - keys
+
+- name: "1.2.1.2 | Ensure package manager repositories are configured"
+  block:
+  - name: "1.2.1.2 | Ensure package manager repositories are configured | Get repositories"
+    shell: apt-cache policy
+    changed_when: false
+    failed_when: false
+    check_mode: false
+    register: apt_policy
+
+  - name: "1.2.1.2 | Ensure package manager repositories are configured | Message out repository configs"
+    debug:
+      msg:
+      - "Warning!! Below are the apt package repositories"
+      - "Please review to make sure they conform to your sites policies"
+      - "{{ apt_policy.stdout_lines }}"
+
+  - name: "1.2.1.2 | Ensure package manager repositories are configured | warn_count"
+    import_tasks:
+      file: warning_facts.yml
+  vars:
+    warn_control_id: '1.2.1.2'
+  tags:
+  - level1-server
+  - level1-workstation
+  - manual
+  - audit
+  - 1.2.1.2
+  - apt
+
+- name: "1.2.2.1 | Ensure updates, patches, and additional security software are installed"
+  block:
+  - name: 1.2.2.1 | Ensure updates, patches, and additional security software are installed | Update apt cache
+    apt:
+      update_cache: yes
+
+  - name: 1.2.2.1 | Ensure updates, patches, and additional security software are installed | Upgrade all packages
+    apt:
+      upgrade: dist
+  tags:
+  - level1-server
+  - level1-workstation
+  - manual
+  - patch
+  - 1.2.2.1
+  - apt
+

@@ -1,0 +1,7 @@
+## Ansible controlled file
+
+[Time]
+NTP={% for pool in cis_time_pool %}{{ pool.name }} {% endfor %}
+
+
+FallbackNTP={% for servers in cis_time_servers %}{{ servers.name }} {% endfor %}

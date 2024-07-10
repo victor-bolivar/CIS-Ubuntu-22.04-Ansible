@@ -1,0 +1,6 @@
+## Ansible controlled file
+
+cat <<EOF
+set superusers="{{ cis_grub_user }}"
+password_pbkdf2 {{ cis_grub_user }} {{ cis_bootloader_password_hash }}
+EOF

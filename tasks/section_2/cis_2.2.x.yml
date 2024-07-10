@@ -1,0 +1,87 @@
+---
+
+- name: "2.2.1 | Ensure NIS Client is not installed"
+  package:
+    name: nis
+    state: absent
+    purge: "{{ cis_purge_apt }}"
+  when:
+  - not cis_nis_required
+  tags:
+  - level1-server
+  - level1-workstation
+  - 2.2.1
+  - nis
+
+- name: "2.2.2 | Ensure rsh client is not installed"
+  package:
+      name: rsh-client
+      state: absent
+      purge: "{{ cis_purge_apt }}"
+  when:
+  - not cis_rsh_required
+  tags:
+  - level1-server
+  - level1-workstation
+  - automated
+  - patch
+  - 2.2.2
+  - rsh
+
+- name: "2.2.3 | Ensure talk client is not installed"
+  package:
+    name: talk
+    state: absent
+    purge: "{{ cis_purge_apt }}"
+  when:
+  - not cis_talk_required
+  tags:
+  - level1-server
+  - level1-workstation
+  - automated
+  - patch
+  - 2.2.3
+  - talk
+
+- name: "2.2.4 | Ensure telnet client is not installed"
+  package:
+    name: telnet
+    state: absent
+    purge: "{{ cis_purge_apt }}"
+  when:
+  - not cis_telnet_required
+  tags:
+  - level1-server
+  - level1-workstation
+  - automated
+  - patch
+  - 2.2.4
+  - telnet
+
+- name: "2.2.5 | Ensure LDAP client is not installed"
+  package:
+    name: ldap-utils
+    state: absent
+    purge: "{{ cis_purge_apt }}"
+  when:
+  - not cis_ldap_clients_required
+  tags:
+  - level1-server
+  - level1-workstation
+  - automated
+  - patch
+  - 2.2.5
+  - ldap
+
+- name: "2.2.6 | Ensure ftp client is not installed"
+  package:
+    name: ftp
+    state: absent
+    purge: "{{ cis_purge_apt }}"
+  tags:
+  - level1-server
+  - level1-workstation
+  - automated
+  - patch
+  - 2.2.6
+  - rpbc
