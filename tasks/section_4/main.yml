@@ -9,6 +9,7 @@
 - name: "SECTION | 4.2 | Configure nftables"
   import_tasks:
     file: cis_4.2.x.yml
+  when:
   - cis_firewall_package == "nftables"
 
 - name: "SECTION | 4.3 | Configure iptables"

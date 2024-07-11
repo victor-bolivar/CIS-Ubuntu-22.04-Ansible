@@ -9,32 +9,11 @@
       line: 'PASS_MAX_DAYS {{ cis_pass.max_days }}'
       insertafter: '# Password aging controls'
 
-  - name: "5.4.1.1 | Ensure password expiration is configured | Get existing users PASS_MAX_DAYS"
-    shell: "awk -F: '(/^[^:]+:[^!*]/ && ($5>{{ cis_pass.max_days }} || $5<{{ cis_pass.min_days }} || $5 == -1)){print $1}' /etc/shadow"
-    changed_when: false
-    failed_when: false
-    register: cis_5_4_1_1_max_days
-    when:
-    - not chage_list_of_users
-
-  - name: "5.4.1.1 | Ensure password expiration is configured | Set existing users PASS_MAX_DAYS"
+  - name: "5.4.1.1 | Ensure password expiration is configured | Configure with chage"
     shell: chage --maxdays {{ cis_pass.max_days }} {{ item }}
-    failed_when: false
-    changed_when: cis_5_4_1_1_max_days.stdout | length > 0
-    loop: "{{ cis_5_4_1_1_max_days.stdout_lines }}"
-    when:
-    - cis_disruption_high
-    - (item != 'root') or (not cis_uses_root)
-    - not chage_list_of_users
-  
-  - name: "5.4.1.1 | Ensure password expiration is configured | Set existing users PASS_MAX_DAYS"
-    shell: chage --maxdays {{ cis_pass.max_days }} {{ item }}
-    failed_when: false
     loop: "{{ chage_list_of_users }}"
     when:
     - cis_disruption_high
-    - (item != 'root') or (not cis_uses_root)
-    - chage_list_of_users
   tags:
   - level1-server
   - level1-workstation
@@ -51,33 +30,12 @@
       path: /etc/login.defs
       regexp: '^PASS_MIN_DAYS|^#PASS_MIN_DAYS'
       line: 'PASS_MIN_DAYS {{ cis_pass.min_days }}'
-
-  - name: "5.4.1.2 | Ensure minimum password age is configured | Get existing users PASS_MIN_DAYS"
-    shell: "awk -F: '(/^[^:]+:[^!*]/ && ($4<{{ cis_pass.min_days }})) {print $1}' /etc/shadow"
-    changed_when: false
-    failed_when: false
-    register: cis_5_4_1_2_min_days
-    when:
-    - not chage_list_of_users
-
-  - name: "5.4.1.2 | Ensure minimum password age is configured | Set existing users PASS_MIN_DAYS"
-    shell: chage --mindays {{ cis_pass.min_days }} {{ item }}
-    failed_when: false
-    changed_when: cis_5_4_1_2_min_days.stdout |length > 0
-    loop: "{{ cis_5_4_1_2_min_days.stdout_lines }}"
-    when:
-    - cis_disruption_high
-    - (item != 'root') or (not cis_uses_root)
-    - not chage_list_of_users
   
-  - name: "5.4.1.2 | Ensure minimum password age is configured | Set existing users PASS_MIN_DAYS"
+  - name: "5.4.1.2 | Ensure minimum password age is configured | Configure with chage"
     shell: chage --mindays {{ cis_pass.min_days }} {{ item }}
-    failed_when: false
     loop: "{{ chage_list_of_users }}"
     when:
     - cis_disruption_high
-    - (item != 'root') or (not cis_uses_root)
-    - chage_list_of_users
   tags:
   - level1-server
   - level1-workstation
@@ -94,34 +52,12 @@
       path: /etc/login.defs
       regexp: '^PASS_WARN_AGE|^#PASS_WARN_AGE'
       line: 'PASS_WARN_AGE {{ cis_pass.warn_age }}'
-
-  - name: "5.4.1.3 | Ensure password expiration warning days is configured | Get existing users PASS_WARN_AGE"
-    shell: "awk -F: '(/^[^:]+:[^!*]/ && $6<{{ cis_pass.warn_age }}){print $1}' /etc/shadow"
-    changed_when: false
-    failed_when: false
-    register: cis_5_4_1_3_warn_days
-    when:
-    - not chage_list_of_users
-
-  - name: "5.4.1.3 | Ensure password expiration warning days is configured | Set existing users PASS_WARN_AGE"
-    shell: chage --maxdays {{ cis_pass.warn_age }} {{ item }}
-    failed_when: false
-    changed_when: cis_5_4_1_3_warn_days.stdout | length > 0
-    loop: "{{ cis_5_4_1_3_warn_days.stdout_lines }}"
-    when:
-    - cis_disruption_high
-    - (item != 'root') or (not cis_uses_root)
-    - not chage_list_of_users
   
-  - name: "5.4.1.3 | Ensure password expiration warning days is configured | Set existing users PASS_WARN_AGE"
+  - name: "5.4.1.3 | Ensure password expiration warning days is configured | Configure with chage"
     shell: chage --maxdays {{ cis_pass.warn_age }} {{ item }}
-    failed_when: false
-    changed_when: cis_5_4_1_3_warn_days.stdout | length > 0
     loop: "{{ chage_list_of_users }}"
     when:
     - cis_disruption_high
-    - (item != 'root') or (not cis_uses_root)
-    - chage_list_of_users
   tags:
   - level1-server
   - level1-workstation

@@ -4,10 +4,18 @@
 # System will reboot if false, can give better audit results
 skip_reboot: true
 
+# Set default value for reboot value
+change_requires_reboot: false
+
 ## Benchmark name and profiles used by auditing control role
 # The audit variable found at the base
 benchmark: CIS-Ubuntu-22.04-Ansible
 benchmark_version: v2.0.0
+min_ansible_version: 2.12.1
+
+# Used to control warning summary
+warn_control_list: ""
+warn_count: 0
 
 ## Possibly disruptive tasks
 # This variable governs whether tasks of a potentially disruptive nature on your system
@@ -256,6 +264,7 @@ firewall_allow_keep_alive: true
 ##
 
 ## 5.1.x -- various sshd settings
+cis_ssh_root_login_ips: None
 cis_sshd_default_log_level: "INFO"
 cis_sshd_default_ciphers:
 - aes256-gcm@openssh.com
@@ -417,13 +426,8 @@ cis_pass:
   # CIS requires a value of 30 days or less.
   inactive: 30
 # The changes above are set configure via two methods: /etc/login.defs and the chage command.
-# For the latter scenario, by default, the changes above will be applied to all users within
-# the /etc/shadow. If you want it to only be applied for a specific list of users, use the
-# following variable:
-#
-# chage_list_of_users:
-# - root
-# - ubuntu
+# For the latter scenario, you need to specify the list OS users in the following variable:
+chage_list_of_users: ['ubuntu']
 
 ## Control 5.4.3.3 - Default user mask
 # The following variable specifies the "umask" to set in the `/etc/bash.bashrc` and `/etc/profile`.

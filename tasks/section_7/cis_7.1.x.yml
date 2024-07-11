@@ -196,7 +196,7 @@
     set_fact:
       unowned_items_filtered: >-
         {{
-          output_6_1_13.stdout_lines | reject('search', '^((' + '|'.join(cis_unowned_items_whitelist) + ')(/|$))') | list
+          unowned_items_flatten | reject('search', '^((' + '|'.join(cis_unowned_items_whitelist) + ')(/|$))') | list
         }}
 
   - name: "7.1.12 | Ensure no files or directories without an owner and a group exist | Alert on unowned files and directories"
@@ -237,7 +237,7 @@
     set_fact:
       ungrouped_items_filtered: >-
         {{
-          output_6_1_13.stdout_lines | reject('search', '^((' + '|'.join(cis_ungrouped_items_whitelist) + ')(/|$))') | list
+          ungrouped_items_flatten | reject('search', '^((' + '|'.join(cis_ungrouped_items_whitelist) + ')(/|$))') | list
         }}
 
   - name: "7.1.12 | Ensure no files or directories without an owner and a group exist | Alert on ungrouped files and directories"
@@ -298,7 +298,7 @@
     set_fact:
       suid_executables_filtered: >-
         {{
-          output_6_1_13.stdout_lines | reject('search', '^((' + '|'.join(cis_suid_whitelist) + ')(/|$))') | list
+          suid_executables_flatten | reject('search', '^((' + '|'.join(cis_suid_whitelist) + ')(/|$))') | list
         }}
 
   - name: "7.1.13 | Ensure SUID and SGID files are reviewed | Alert SUID executables exist"
@@ -339,7 +339,7 @@
     set_fact:
       sgid_executables_filtered: >-
         {{
-          output_6_1_13.stdout_lines | reject('search', '^((' + '|'.join(cis_sgid_whitelist) + ')(/|$))') | list
+          sgid_executables_flatten | reject('search', '^((' + '|'.join(cis_sgid_whitelist) + ')(/|$))') | list
         }}
 
   - name: "7.1.13 | Ensure SUID and SGID files are reviewed | Alert SGID executables exist"

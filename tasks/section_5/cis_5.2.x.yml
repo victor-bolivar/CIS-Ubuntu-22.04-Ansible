@@ -41,12 +41,21 @@
   - sudo
 
 - name: "5.2.4 | Ensure users must provide password for escalation"
-  replace:
-    path: "{{ item }}"
-    regexp: '^([^#|{% if system_is_ec2 %}ec2-user{% endif %}].*)NOPASSWD(.*)'
-    replace: '\1PASSWD\2'
-    validate: '/usr/sbin/visudo -cf %s'
-  loop: "{{ cis_sudoers_files.stdout_lines }}"
+  block:
+  - name: "5.2.4 | Ensure users must provide password for escalation | Find all sudoers files"
+    shell: "find /etc/sudoers /etc/sudoers.d/ -type f ! -name '*~' ! -name '*.*'"
+    changed_when: false
+    failed_when: false
+    check_mode: false
+    register: cis_sudoers_files
+
+  - name: "5.2.4 | Ensure users must provide password for escalation | Apply changes"
+    replace:
+      path: "{{ item }}"
+      regexp: '^([^#|{% if system_is_ec2 %}ec2-user{% endif %}].*)NOPASSWD(.*)'
+      replace: '\1PASSWD\2'
+      validate: '/usr/sbin/visudo -cf %s'
+    loop: "{{ cis_sudoers_files.stdout_lines }}"
   tags:
   - level2-server
   - level2-workstation
@@ -55,12 +64,21 @@
   - 5.2.4
 
 - name: "5.2.5 | Ensure re-authentication for privilege escalation is not disabled globally"
-  replace:
-    path: "{{ item }}"
-    regexp: '^([^#].*)!authenticate(.*)'
-    replace: '\1authenticate\2'
-    validate: '/usr/sbin/visudo -cf %s'
-  loop: "{{ cis_sudoers_files.stdout_lines }}"
+  block:
+  - name: "5.2.5 | Ensure re-authentication for privilege escalation is not disabled globally | Find all sudoers files"
+    shell: "find /etc/sudoers /etc/sudoers.d/ -type f ! -name '*~' ! -name '*.*'"
+    changed_when: false
+    failed_when: false
+    check_mode: false
+    register: cis_sudoers_files
+
+  - name: "5.2.5 | Ensure re-authentication for privilege escalation is not disabled globally | Apply changes"
+    replace:
+      path: "{{ item }}"
+      regexp: '^([^#].*)!authenticate(.*)'
+      replace: '\1authenticate\2'
+      validate: '/usr/sbin/visudo -cf %s'
+    loop: "{{ cis_sudoers_files.stdout_lines }}"
   tags:
   - level1-server
   - level1-workstation

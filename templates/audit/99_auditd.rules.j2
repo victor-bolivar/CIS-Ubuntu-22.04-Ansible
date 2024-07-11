@@ -9,7 +9,7 @@
 -a always,exit -F arch=b32 -C euid!=uid -F auid!=unset -S execve -k user_emulation
 
 # 6.3.3.3 Ensure events that modify the sudo log file are collected
--w {{ ubtu22cis_sudo_logfile }} -p wa -k sudo_log_file
+-w {{ cis_sudo_logfile }} -p wa -k sudo_log_file
 
 # 6.3.3.4 Ensure events that modify date and time information are collected
 -a always,exit -F arch=b64 -S adjtimex,settimeofday,clock_settime -k time-change

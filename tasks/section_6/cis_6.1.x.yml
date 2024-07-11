@@ -24,6 +24,11 @@
       state: present
     when: (aide_checksums is defined) and (aide_checksums| length > 0)
 
+  - name: Configure default AIDE excludes file
+    copy:
+      src: "files/6_1_1_local_excludes.txt"
+      dest: "/etc/aide/aide.conf.d/00_local_excludes"
+
   - name: 6.1.1 | Ensure AIDE is installed | Add extra AIDE exclude paths
     lineinfile:
       line: "{{ item }}"
