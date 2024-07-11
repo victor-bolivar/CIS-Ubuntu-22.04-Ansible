@@ -1,0 +1,17 @@
+---
+
+- name: "SECTION | 2.1.x | Configure Server Services "
+  import_tasks:
+    file: cis_2.1.x.yml
+
+- name: "SECTION | 2.2.x | Configure Client Services"
+  import_tasks:
+    file: cis_2.2.x.yml
+
+- name: "SECTION | 2.3.x | Configure Time Synchronization"
+  import_tasks:
+    file: cis_2.3.x.yml
+
+- name: "SECTION | 2.4.x | Job Schedulers"
+  import_tasks:
+    file: cis_2.4.x.yml

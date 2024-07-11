@@ -1,0 +1,5 @@
+## Ansible controlled file
+
+{% for pool in cis_time_pool %}
+pool {{ pool.name }} {{ pool.options }}
+{% endfor %}

@@ -1,0 +1,336 @@
+---
+
+- name: "6.3.1.1 | Ensure auditd packages are installed"
+  package:
+    name: ['auditd', 'audispd-plugins']
+    state: present
+  when:
+  - "'auditd' not in ansible_facts.packages or 'auditd-plugins' not in ansible_facts.packages"
+  tags:
+  - level2-server
+  - level2-workstation
+  - automated
+  - patch
+  - 6.3.1.1
+  - auditd
+
+- name: "6.3.1.2 | Ensure auditd service is enabled and active"
+  service:
+    name: auditd
+    state: started
+    enabled: true
+  tags:
+  - level2-server
+  - level2-workstation
+  - automated
+  - patch
+  - 6.3.1.2
+  - auditd
+
+- name: "6.3.1.3 | Ensure auditing for processes that start prior to auditd is enabled"
+  block:
+  - name: "6.3.1.3 | Ensure auditing for processes that start prior to auditd is enabled | Get GRUB_CMDLINE_LINUX"
+    shell: grep "GRUB_CMDLINE_LINUX=" /etc/default/grub | cut -f2 -d'"'
+    changed_when: false
+    failed_when: false
+    check_mode: false
+    register: cis_6_3_1_3_cmdline_settings
+
+  - name: "6.3.1.3 | Ensure auditing for processes that start prior to auditd is enabled | Add setting if doesn't exist"
+    lineinfile:
+      path: /etc/default/grub
+      regexp: '^GRUB_CMDLINE_LINUX='
+      line: 'GRUB_CMDLINE_LINUX="{{ cis_6_3_1_3_cmdline_settings.stdout }} audit=1"'
+    when: "'audit=' not in cis_6_3_1_3_cmdline_settings.stdout"
+    notify: Grub update
+
+  - name: "6.3.1.3 | Ensure auditing for processes that start prior to auditd is enabled | Update setting if exists"
+    replace:
+      dest: /etc/default/grub
+      regexp: 'audit=([0-9]+)'
+      replace: 'audit=1'
+      after: '^GRUB_CMDLINE_LINUX="'
+      before: '"'
+    notify: Grub update
+    when: "'audit=' in cis_6_3_1_3_cmdline_settings.stdout"
+  tags:
+  - level2-server
+  - level2-workstation
+  - automated
+  - patch
+  - 6.3.1.3
+  - auditd
+
+- name: "6.3.1.4 | Ensure audit_backlog_limit is sufficient"
+  block:
+  - name: "6.3.1.4 | Ensure audit_backlog_limit is sufficient | Get current GRUB_CMDLINE_LINUX"
+    shell: grep "GRUB_CMDLINE_LINUX=" /etc/default/grub | cut -f2 -d'"'
+    changed_when: false
+    failed_when: false
+    check_mode: false
+    register: cis_6_3_1_4_cmdline_settings
+
+  - name: "6.3.1.4 | Ensure audit_backlog_limit is sufficient | Add setting if doesn't exist"
+    lineinfile:
+      path: /etc/default/grub
+      regexp: '^GRUB_CMDLINE_LINUX='
+      line: 'GRUB_CMDLINE_LINUX="{{ cis_6_3_1_4_cmdline_settings.stdout }} audit_backlog_limit={{ cis_audit_back_log_limit }}"'
+    notify: Grub update
+    when: "'audit_backlog_limit=' not in cis_6_3_1_4_cmdline_settings.stdout"
+
+  - name: "6.3.1.4 | Ensure audit_backlog_limit is sufficient | Update setting if exists"
+    replace:
+      dest: /etc/default/grub
+      regexp: 'audit_backlog_limit=([0-9]+)'
+      replace: 'audit_backlog_limit={{ cis_audit_back_log_limit }}'
+      after: '^GRUB_CMDLINE_LINUX="'
+      before: '"'
+    notify: Grub update
+  tags:
+  - level2-server
+  - level2-workstation
+  - automated
+  - patch
+  - 6.3.1.4
+  - auditd
+
+- name: "6.3.2.1 | Ensure audit log storage size is configured"
+  lineinfile:
+    dest: /etc/audit/auditd.conf
+    regexp: "^max_log_file( |=)"
+    line: "max_log_file = {{ cis_max_log_file_size }}"
+    state: present
+  notify: Restart auditd
+  tags:
+  - level2-server
+  - level2-workstation
+  - automated
+  - patch
+  - 6.3.2.1
+  - auditd
+
+- name: "6.3.2.2 | Ensure audit logs are not automatically deleted"
+  lineinfile:
+    path: /etc/audit/auditd.conf
+    regexp: '^max_log_file_action'
+    line: "max_log_file_action = {{ cis_auditd['max_log_file_action'] }}"
+  notify: Restart auditd
+  tags:
+  - level2-server
+  - level2-workstation
+  - automated
+  - patch
+  - 6.3.2.2
+  - auditd
+
+- name: "6.3.2.3 | Ensure system is disabled when audit logs are full"
+  lineinfile:
+    path: /etc/audit/auditd.conf
+    regexp: "{{ item.regexp }}"
+    line: "{{ item.line }}"
+  notify: Restart auditd
+  with_items:
+  - { regexp: '^disk_full_action', line: "disk_full_action = {{ cis_auditd['disk_full_action'] }}" }
+  - { regexp: '^disk_error_action', line: "disk_error_action = {{ cis_auditd['disk_error_action'] }}" }
+  tags:
+  - level2-server
+  - level2-workstation
+  - automated
+  - patch
+  - 6.3.2.3
+  - auditd
+
+- name: "6.3.2.4 | Ensure system warns when audit logs are low on space"
+  lineinfile:
+    path: /etc/audit/auditd.conf
+    regexp: "{{ item.regexp }}"
+    line: "{{ item.line }}"
+  notify: Restart auditd
+  with_items:
+  - { regexp: '^space_left_action', line: "space_left_action = {{ cis_auditd['space_left_action'] }}" }
+  - { regexp: '^action_mail_acct', line: "action_mail_acct = {{ cis_auditd['action_mail_acct'] }}" }
+  - { regexp: '^admin_space_left_action', line: "admin_space_left_action = {{ cis_auditd['admin_space_left_action'] }}" }
+  tags:
+  - level2-server
+  - level2-workstation
+  - automated
+  - patch
+  - 6.3.2.4
+  - auditd
+
+- name: "6.3.3 | Configure auditd Rules"
+  block:
+  - name: "6.3.3.6 | Ensure use of privileged commands are collected"
+    shell: for i in  $(findmnt -n -l -k -it $(awk '/nodev/ { print $2 }' /proc/filesystems | paste -sd,) | grep -Pv "noexec|nosuid" | awk '{print $1}'); do find $i -xdev -type f -perm -4000 -o -type f -perm -2000 2>/dev/null; done
+    register: priv_procs
+    changed_when: false
+      
+  - name: "6.3.3 | Configure auditd Rules | Apply auditd template"
+    template:
+      src: audit/99_auditd.rules.j2
+      dest: /etc/audit/rules.d/99_auditd.rules
+      owner: root
+      group: root
+      mode: '0640'
+    register: audit_rules_updated
+    notify:
+    - Auditd rules reload
+    - Audit_immutable_fact
+    - Restart auditd
+    - set_reboot_required
+  
+  - name: "6.3.3 | Configure auditd Rules | Ensure the running and on disk configuration is the same"
+    shell: augenrules --check
+    changed_when: false
+    register: augenrules_check
+  
+  - name: "6.3.3 | Configure auditd Rules | Print check result"
+    debug:
+      var: augenrules_check.stdout
+  tags:
+  - level2-server
+  - level2-workstation
+  - automated
+  - patch
+  - 6.3.3
+  - auditd
+
+- name: |
+    "6.3.4.1 | Ensure audit log files mode is configured"
+    "6.3.4.2 | Ensure audit log files owner is configured"
+    "6.3.4.3 | Ensure audit log files group owner is configured"
+  block:
+  - name: "6.3.4.1 | Ensure audit log files mode is configured | Read config file"
+    shell: grep ^log_file /etc/audit/auditd.conf | awk '{ print $NF }'
+    changed_when: false
+    register: audit_discovered_logfile
+
+  - name: "6.3.4.1 | Ensure audit log files mode is configured | stat file"
+    stat:
+      path: "{{ audit_discovered_logfile.stdout }}"
+    changed_when: false
+    register: auditd_logfile
+
+  - name: |
+      "6.3.4.1 | Ensure audit log files mode is configured"
+      "6.3.4.2 | Ensure audit log files owner is configured"
+      "6.3.4.3 | Ensure audit log files group owner is configured"
+    file:
+      path: "{{ audit_discovered_logfile.stdout }}"
+      mode: "{% if auditd_logfile.stat.mode > '0640' %}0640{% endif %}"
+      owner: root
+      group: root
+  tags:
+  - level1-server
+  - level1-workstation
+  - patch
+  - auditd
+  - 6.3.4.1
+  - 6.3.4.2
+  - 6.3.4.3
+
+- name: "6.3.4.4 | Ensure the audit log file directory mode is configured"
+  block:
+  - name: "6.3.4.4 | Ensure the audit log file directory mode is configured | Get current permissions"
+    stat:
+      path: "{{ audit_discovered_logfile.stdout | dirname }}"
+    register: auditlog_dir
+
+  - name: "6.3.4.4 | Ensure the audit log file directory mode is configured | Update mode"
+    file:
+      path: "{{ audit_discovered_logfile.stdout | dirname }}"
+      state: directory
+      mode: '0750'
+    when: not auditlog_dir.stat.mode is match('07(0|5)0')
+  tags:
+  - level1-server
+  - level1-workstation
+  - patch
+  - 6.3.4.4
+
+- name: |
+    6.3.4.5 | Ensure the audit log file directory mode is configured
+    6.3.4.6 | Ensure audit configuration files owner is configured
+    6.3.4.7 | Ensure audit configuration files group owner is configured
+  block:
+  - name: |
+      6.3.4.5 | Ensure the audit log file directory mode is configured
+      6.3.4.6 | Ensure audit configuration files owner is configured
+      6.3.4.7 | Ensure audit configuration files group owner is configured | List files
+    find:
+      path: /etc/audit/
+      file_type: file
+      recurse: true
+      patterns: '*.conf,*.rules'
+    register: auditd_conf_files
+
+  - name: |
+      6.3.4.5 | Ensure the audit log file directory mode is configured
+      6.3.4.6 | Ensure audit configuration files owner is configured
+      6.3.4.7 | Ensure audit configuration files group owner is configured | Apply changes
+    file:
+      path: "{{ item.path }}"
+      mode: '0640'
+      owner: root
+      group: root
+    loop: "{{ auditd_conf_files.files }}"
+    loop_control:
+      label: "{{ item.path }}"
+  tags:
+  - level1-server
+  - level1-workstation
+  - patch
+  - auditd
+  - 6.3.4.5
+  - 6.3.4.6
+  - 6.3.4.7
+
+- name: "6.3.4.8 | Ensure audit tools mode is configured"
+  block:
+  - name: "6.3.4.8 | Ensure audit tools mode is configured | Get audit binary file stat"
+    stat:
+      path: "{{ item }}"
+    register: "audit_bins"
+    loop:
+    - /sbin/auditctl
+    - /sbin/aureport
+    - /sbin/ausearch
+    - /sbin/autrace
+    - /sbin/auditd
+    - /sbin/augenrules
+
+  - name: "6.3.4.8 | Ensure audit tools mode is configured | Set if required"
+    file:
+      path: "{{ item.item }}"
+      mode: '755'
+    loop: "{{ audit_bins.results }}"
+    loop_control:
+      label: "{{ item.item }}"
+  tags:
+  - level1-server
+  - level1-workstation
+  - patch
+  - auditd
+  - 6.3.4.8
+
+- name: |
+    6.3.4.9 Ensure audit tools owner is configured
+    6.3.4.10 Ensure audit tools group owner is configured
+  file:
+    path: "{{ item }}"
+    owner: root
+    group: root
+  loop:
+  - /sbin/auditctl
+  - /sbin/aureport
+  - /sbin/ausearch
+  - /sbin/autrace
+  - /sbin/auditd
+  - /sbin/augenrules
+  tags:
+  - level1-server
+  - level1-workstation
+  - patch
+  - auditd
+  - 6.3.4.9
+  - 6.3.4.10

@@ -1,13 +1,423 @@
 ---
-- include: section_1_Initial_Setup.yaml
-  become: true
-- include: section_2_Services.yaml
-  become: true
-- include: section_3_Network_Configuration.yaml
-  become: true
-- include: section_4_Logging_and_Auditing.yaml
-  become: true
-- include: section_5_Access_Authentication_and_Authorization.yaml
-  become: true
-- include: section_6_System_Maintenance.yaml
-  become: true
+
+- name: Check OS version and family
+  fail:
+    msg: "This role can only be run against Ubuntu 22. {{ ansible_facts.distribution }} {{ ansible_facts.distribution_major_version }} is not supported."
+  when:
+  - ansible_facts.distribution == 'Ubuntu'
+  - ansible_facts.distribution_major_version is version_compare('22', '!=')
+  tags:
+  - always
+
+- name: Check ansible version
+  assert:
+    that: ansible_version.full is version_compare(min_ansible_version, '>=')
+    fail_msg: "You must use Ansible {{ min_ansible_version }} or greater"
+    success_msg: "This role is running a supported version of ansible {{ ansible_version.full }} >= {{ min_ansible_version }}"
+  tags:
+  - always
+
+- name: Gather the package facts before preliminary tasks
+  package_facts:
+    manager: auto
+  tags:
+  - always
+
+## Preliminary tasks
+# These tasks don't make any changes; they are just to gather
+# information about the system that will be used in later tasks.
+
+- name: "Set default values for facts"
+  set_fact:
+    control_1_6_1_4_was_run: false
+    cis_apparmor_enforce_only: false
+  changed_when: false
+  tags:
+  - prelim
+
+- name: "Register if snap being used"
+  shell: df -h | grep -wc "/snap"
+  changed_when: false
+  failed_when: snap_pkg_mgr.rc not in [ 0, 1 ]
+  register: snap_pkg_mgr
+  tags:
+  - 1.1.1.6
+  - prelim
+
+- name: "Register if squashfs is built into the kernel"
+  shell: cat /lib/modules/$(uname -r)/modules.builtin | grep  -c "squashfs"
+  changed_when: false
+  failed_when: squashfs_builtin.rc not in [ 0, 1 ]
+  register: squashfs_builtin
+  tags:
+  - 1.1.1.6
+  - prelim
+
+- name: "Create list of mount points"
+  set_fact:
+    mount_names: "{{ ansible_facts.mounts | map(attribute='mount') | list }}"
+  tags:
+  - section1
+  - prelim
+
+- name: Capture tmp mount type | discover mount tmp type
+  block:
+  - name: Capture tmp mount type | discover mount tmp type
+    shell: systemctl is-enabled tmp.mount
+    register: discover_tmp_mnt_type
+    changed_when: false
+    failed_when: discover_tmp_mnt_type.rc not in [ 0, 1 ]
+
+  - name: Capture tmp mount type | Set to expected_tmp_mnt variable
+    set_fact:
+      tmp_mnt_type: "{{ expected_tmp_mnt }}"
+    when: "'generated' in discover_tmp_mnt_type.stdout"
+
+  - name: Capture tmp mount type | Set systemd service
+    set_fact:
+      tmp_mnt_type: tmp_systemd
+    when: "'generated' not in discover_tmp_mnt_type.stdout"
+  when:
+  - "'/tmp' in mount_names"
+  tags:
+  - section1
+  - prelim
+
+- name: Initialize the mount options variable for /tmp
+  block:
+  - name: Initializing the var if there is no /tmp mount | set_fact
+    set_fact:
+      tmp_partition_mount_options: []
+    when: "'/tmp' not in mount_names"
+
+  - name: Initializing the var if there is a /tmp mount | set_fact
+    set_fact:
+      tmp_partition_mount_options: "{{ item.options.split(',') }}"
+    loop: "{{ ansible_facts.mounts }}"
+    when:
+    - item.mount == "/tmp"
+    - "'/tmp' in mount_names"
+  tags:
+  - section1
+  - 1.1.2.1.2
+  - 1.1.2.1.3
+  - 1.1.2.1.4
+  - prelim
+
+- name: Initialize the mount options variable for /dev/shm
+  block:
+  - name: Initializing the var if there is no /dev/shm mount | set_fact
+    set_fact:
+      dev_shm_partition_mount_options: []
+    when: "'/dev/shm' not in mount_names"
+
+  - name: Initializing the var if there is a /dev/shm mount | set_fact
+    set_fact:
+      dev_shm_partition_mount_options: "{{ item.options.split(',') }}"
+    loop: "{{ ansible_facts.mounts }}"
+    when:
+    - item.mount == "/dev/shm"
+    - "'/dev/shm' in mount_names"
+  tags:
+  - section1
+  - 1.1.2.2.2
+  - 1.1.2.2.3
+  - 1.1.2.2.4
+  - prelim
+
+- name: Initialize the mount options variable for /home
+  block:
+  - name: Initializing the var if there is no /home mount | set_fact
+    set_fact:
+      home_partition_mount_options: []
+    when: "'/home' not in mount_names"
+
+  - name: Initializing the var if there is a /home mount | set_fact
+    set_fact:
+      home_partition_mount_options: "{{ item.options.split(',') }}"
+    loop: "{{ ansible_facts.mounts }}"
+    when:
+    - item.mount == "/home"
+    - "'/home' in mount_names"
+  tags:
+  - prelim
+  - section1
+  - 1.1.2.3.2
+  - 1.1.2.3.3
+  - 1.1.2.3.4
+  
+- name: Initialize the mount options variable for /var
+  block:
+  - name: Initializing the var if there is no /var mount | set_fact
+    set_fact:
+      var_partition_mount_options: []
+    when: "'/var' not in mount_names"
+
+  - name: Initializing the var if there is a /var mount | set_fact
+    set_fact:
+      var_partition_mount_options: "{{ item.options.split(',') }}"
+    loop: "{{ ansible_facts.mounts }}"
+    when:
+    - item.mount == "/var"
+    - "'/var' in mount_names"
+  tags:
+  - prelim
+  - section1
+  - 1.1.2.4.2
+  - 1.1.2.4.3
+  - 1.1.2.4.4
+
+- name: Initialize the mount options variable for /var/tmp
+  block:
+  - name: Initializing the var if there is no /var/tmp mount | set_fact
+    set_fact:
+      var_tmp_partition_mount_options: []
+    when: "'/var/tmp' not in mount_names"
+
+  - name: Initializing the var if there is a /var/tmp mount | set_fact
+    set_fact:
+      var_tmp_partition_mount_options: "{{ item.options.split(',') }}"
+    loop: "{{ ansible_facts.mounts }}"
+    when:
+    - item.mount == "/var/tmp"
+    - "'/var/tmp' in mount_names"
+  tags:
+  - prelim
+  - section1
+  - 1.1.2.3.2
+  - 1.1.2.3.3
+  - 1.1.2.3.4
+
+- name: Initialize the mount options variable for /var/tmp
+  block:
+  - name: Initializing the var if there is no /var/tmp mount | set_fact
+    set_fact:
+      var_tmp_partition_mount_options: []
+    when: "'/var/tmp' not in mount_names"
+
+  - name: Initializing the var if there is a /var/tmp mount | set_fact
+    set_fact:
+      var_tmp_partition_mount_options: "{{ item.options.split(',') }}"
+    loop: "{{ ansible_facts.mounts }}"
+    when:
+    - item.mount == "/var/tmp"
+    - "'/var/tmp' in mount_names"
+  tags:
+  - prelim
+  - section1
+  - 1.1.2.5.2
+  - 1.1.2.5.3
+  - 1.1.2.5.4
+
+- name: Initialize the mount options variable for /var/log
+  block:
+  - name: Initializing the var if there is no /var/log mount | set_fact
+    set_fact:
+      var_log_partition_mount_options: []
+    when: "'/var/log' not in mount_names"
+
+  - name: Initializing the var if there is a /var/log mount | set_fact
+    set_fact:
+      var_log_partition_mount_options: "{{ item.options.split(',') }}"
+    loop: "{{ ansible_facts.mounts }}"
+    when:
+    - item.mount == "/var/log"
+    - "'/var/log' in mount_names"
+  tags:
+  - prelim
+  - section1
+  - 1.1.2.6.2
+  - 1.1.2.6.3
+  - 1.1.2.6.4
+
+- name: Initialize the mount options variable for /var/log/audit
+  block:
+  - name: Initializing the var if there is no /var/log/audit mount | set_fact
+    set_fact:
+      var_log_audit_partition_mount_options: []
+    when: "'/var/log/audit' not in mount_names"
+
+  - name: Initializing the var if there is a /var/log/audit mount | set_fact
+    set_fact:
+      var_log_audit_partition_mount_options: "{{ item.options.split(',') }}"
+    loop: "{{ ansible_facts.mounts }}"
+    when:
+    - item.mount == "/var/log/audit"
+    - "'/var/log/audit' in mount_names"
+  tags:
+  - prelim
+  - section1
+  - 1.1.2.7.2
+  - 1.1.2.7.3
+  - 1.1.2.7.4
+
+- name: "Discover Interactive UID MIN and MIN from logins.def"
+  block:
+  - name: "Capture UID_MIN information from logins.def"
+    shell: grep -w "^UID_MIN" /etc/login.defs | awk '{print $NF}'
+    changed_when: false
+    register: uid_min_id
+
+  - name: "Capture UID_MAX information from logins.def"
+    shell: grep -w "^UID_MAX" /etc/login.defs | awk '{print $NF}'
+    changed_when: false
+    register: uid_max_id
+
+  - name: "Capture GID_MIN information from logins.def"
+    shell: grep -w "^GID_MIN" /etc/login.defs | awk '{print $NF}'
+    changed_when: false
+    register: gid_min_id
+
+  - name: "Set_facts for interactive uid/gid"
+    set_fact:
+      min_int_uid: "{{ uid_max_id.stdout }}"
+      min_int_uid: "{{ uid_min_id.stdout }}"
+      max_int_gid: "{{ gid_min_id.stdout }}"
+  when:
+  - not discover_int_uid
+  tags:
+  - prelim
+  - section7
+
+- name: "Interactive User accounts"
+  shell: >
+    grep -E -v '^(root|halt|sync|shutdown)' /etc/passwd | awk -F: '(!index($7, "sbin/nologin") && $7 != "/bin/false") { print $6 }'
+  changed_when: false
+  register: interactive_users_home
+  tags:
+  - prelim
+  - section7
+
+- name: "Install ACL"
+  package:
+    name: acl
+    state: present
+  when:
+  - "'acl' not in ansible_facts.packages"
+  tags:
+  - prelim
+  - section6
+
+- name: "UFW firewall force to use /etc/sysctl.conf settings if required"
+  lineinfile:
+    path: /etc/default/ufw
+    regexp: ^IPT_SYSCTL=.*
+    line: IPT_SYSCTL=/etc/sysctl.conf
+  when:
+  - cis_firewall_package == "ufw"
+  - cis_ufw_use_sysctl
+  tags:
+  - prelim
+  - always
+
+- name: Gather the package facts after preliminary tasks
+  package_facts:
+    manager: auto
+  tags:
+  - prelim
+  - always
+
+- name: "Parse /etc/passwd"
+  block:
+  - name: "Parse /etc/passwd | Get /etc/password contents"
+    shell: cat /etc/passwd
+    changed_when: false
+    check_mode: false
+    register: cis_passwd_file_audit
+
+  - name: "Parse /etc/passwd | Split passwd entries"
+    set_fact:
+      cis_passwd: "{{ cis_passwd_file_audit.stdout_lines | map('regex_replace', ld_passwd_regex, ld_passwd_yaml) | map('from_yaml') | list }}"
+    with_items: "{{ cis_passwd_file_audit.stdout_lines }}"
+    vars:
+      ld_passwd_regex: >-
+        ^(?P<id>[^:]*):(?P<password>[^:]*):(?P<uid>[^:]*):(?P<gid>[^:]*):(?P<gecos>[^:]*):(?P<dir>[^:]*):(?P<shell>[^:]*)
+      ld_passwd_yaml: |
+        id: >-4
+            \g<id>
+        password: >-4
+            \g<password>
+        uid: \g<uid>
+        gid: \g<gid>
+        gecos: >-4
+            \g<gecos>
+        dir: >-4
+            \g<dir>
+        shell: >-4
+            \g<shell>
+  tags:
+  - prelim
+  - always
+
+## CIS
+
+- name: Include section 1 tasks
+  import_tasks:
+    file: section_1/main.yml
+  tags:
+  - section1
+
+- name: Include section 2 tasks
+  import_tasks:
+    file: section_2/main.yml
+  tags:
+  - section2
+
+- name: Include section 3 tasks
+  import_tasks:
+    file: section_3/main.yml
+  tags:
+  - section3
+
+- name: Include section 4 tasks
+  import_tasks:
+    file: section_4/main.yml
+  tags:
+  - section4
+
+- name: Include section 5 tasks
+  import_tasks: section_5/main.yml
+  tags:
+  - section5
+
+- name: Include section 6 tasks
+  import_tasks:
+    file: section_6/main.yml
+  tags:
+  - section6
+
+- name: Include section 7 tasks
+  import_tasks:
+    file: section_7/main.yml
+  tags:
+  - section7
+
+## Post-execution tasks
+
+- name: Flush handlers
+  meta: flush_handlers
+  tags:
+  - always
+
+- name: Reboot system
+  block:
+  - name: Reboot system if not skipped
+    reboot:
+    when:
+    - not skip_reboot
+    - change_requires_reboot
+
+  - name: Warning a reboot required but skip option set
+    debug:
+      msg: "Warning!! changes have been made that require a reboot to be implemented but skip reboot was set - Can affect compliance check results"
+    changed_when: true
+    when:
+    - skip_reboot
+    - change_requires_reboot
+
+- name: If Warnings found Output count and control IDs affected
+  debug:
+    msg: "You have {{ warn_count }} Warning(s) that require investigating that are related to the following benchmark ID(s) {{ warn_control_list }}"
+  when: warn_count != 0
+  tags:
+  - always

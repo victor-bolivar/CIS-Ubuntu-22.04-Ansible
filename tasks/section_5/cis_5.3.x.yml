@@ -1,0 +1,653 @@
+
+---
+
+- name: 5.3.1.1 | Ensure latest version of pam is installed
+  apt:
+    name: libpam-runtime
+    state: latest
+  tags:
+  - level1-server
+  - level1-workstation
+  - automated
+  - patch
+  - 5.3.1.1
+
+- name: 5.3.1.2 | Ensure libpam-modules is installed
+  apt:
+    name: libpam-modules
+    state: present
+  tags:
+  - level1-server
+  - level1-workstation
+  - automated
+  - patch
+  - 5.3.1.2
+
+- name: 5.3.1.3 | Ensure libpam-pwquality is installed
+  apt:
+    name: libpam-pwquality
+    state: present
+  tags:
+  - level1-server
+  - level1-workstation
+  - automated
+  - patch
+  - 5.3.1.3
+
+# NOTE: Direct editing of /etc/pam.d/* files was preferred over using
+# pam-auth-update to achieve a more granular and controlled configuration.
+#
+# - name: 5.3.2.1 | Ensure pam_unix module is enabled
+#   command: pam-auth-update --enable unix
+#   when:
+#       - cis_5_3_2_1
+#   tags:
+#       - level1-server
+#       - level1-workstation
+#       - automated
+#       - patch
+#       - 5.3.2.1
+
+- name: "5.3.2.2 | Ensure lockout for failed password attempts is configured"
+  block:
+  - name: "5.3.2.2 | Ensure lockout for failed password attempts is configured | Check pam faillock is set"
+    shell: grep -E "preauth|authfail|authsucc" /etc/pam.d/common-auth | grep pam_faillock.so
+    register: faillock_state
+    failed_when: faillock_state.rc not in [0, 1]
+    changed_when: false
+
+  ## Issues have been seen with this control that can't always be replicated
+  ## Please ensure you understand what this control is doing before overriding the current settings
+  - name: "5.3.2.2 | Ensure lockout for failed password attempts is configured | Set faillock in common-auth"
+    replace:
+      path: /etc/pam.d/common-auth
+      before: .*pam_deny.so
+      regexp: .*pam_unix.so nullok
+      replace: "{{ cis_faillock_config }}"
+    when:
+    - "'pam_faillock.so' not in faillock_state.stdout"
+    - cis_allow_common_auth_rewrite
+
+  - name: "5.3.2.2 | Ensure lockout for failed password attempts is configured | Set faillock common-account"
+    lineinfile:
+      path: /etc/pam.d/common-account
+      regexp: '^account\s+required\s+pam_faillock.so'
+      line: 'account required              pam_faillock.so'
+
+  - name: "5.3.2.2 | Ensure lockout for failed password attempts is configured | Set pam_deny.so and pam_tally.so"
+    lineinfile:
+      path: /etc/security/faillock.conf
+      regexp: "{{ item.regexp }}"
+      line: "{{ item.line }}"
+      insertafter: '^# end of pam-auth-update config'
+      create: true
+    loop:
+    - { regexp: '^deny', line: 'deny = 4' }
+    - { regexp: '^fail_interval', line: 'fail_interval = 900' }
+    - { regexp: '^unlock_time', line: 'unlock_time = 600' }
+  tags:
+  - level1-server
+  - level1-workstation
+  - automated
+  - patch
+  - 5.3.2.2
+  - pam
+  - notimplemented
+
+- name: 5.3.2.3 | Ensure pam_pwquality module is enabled
+  block:
+  - name: "5.3.2.3 | Ensure pam_pwquality module is enabled | Confirm pwquality module in common-password"
+    shell: grep 'password.*requisite.*pam_pwquality.so' /etc/pam.d/common-password
+    changed_when: false
+    failed_when: false
+    check_mode: false
+    register: cis_5_3_2_3_pam_pwquality_state
+
+  - name: "5.3.2.3 | Ensure pam_pwquality module is enabled | Set retry to 3 if pwquality exists"
+    community.general.pamd:
+      name: common-password
+      type: password
+      control: requisite
+      module_path: pam_pwquality.so
+      module_arguments: 'retry=3'
+      state: args_present
+    when: cis_5_3_2_3_pam_pwquality_state.stdout | length > 0
+
+  - name: "5.3.2.3 | Ensure pam_pwquality module is enabled | Set retry to 3 if pwquality does not exist"
+    community.general.pamd:
+      name: common-password
+      type: password
+      control: required
+      module_path: pam_permit.so
+      new_type: password
+      new_control: requisite
+      new_module_path: pam_pwquality.so
+      module_arguments: 'retry=3'
+      state: after
+    when: cis_5_3_2_3_pam_pwquality_state.stdout | length == 0
+  tags:
+  - level1-server
+  - level1-workstation
+  - automated
+  - patch
+  - 5.3.2.3
+
+- name: 5.3.2.4 | Ensure pam_pwhistory module is enabled
+  block:
+  - name: "5.3.2.4 | Ensure pam_pwhistory module is enabled | Add pam_unix or edit it accordingly"
+    community.general.pamd:
+      name: common-password
+      type: password
+      control: '[success=1 default=ignore]'
+      module_path: pam_unix.so
+      module_arguments: 'obscure yescrypt use_authtok'
+      state: args_present
+
+  - name: "5.3.2.4 | Ensure pam_pwhistory module is enabled 5.4.3 | Set remember value after adding pam unix"
+    community.general.pamd:
+      name: common-password
+      type: password
+      control: '[success=1 default=ignore]'
+      module_path: pam_unix.so
+      new_type: password
+      new_module_path: pam_pwhistory.so
+      new_control: required
+      module_arguments: 'use_authtok remember={{ cis_pamd_pwhistory_remember }} enforce_for_root try_first_pass'
+      state: before
+  tags:
+  - level1-server
+  - level1-workstation
+  - automated
+  - patch
+  - 5.3.2.4
+
+- name: 5.3.3.1.1 | Ensure password failed attempts lockout is configured
+  block:
+  - name: 5.3.3.1.1 | Ensure password failed attempts lockout is configured | Configure /etc/security/faillock.conf
+    lineinfile:
+      path: /etc/security/faillock.conf
+      regexp: "^deny"
+      line: "deny = 5"
+      insertafter: '^# end of pam-auth-update config'
+      create: true
+  
+  - name:  5.3.3.1.1 | Ensure password failed attempts lockout is configured | Find files containing pam_faillock.so with deny=<N> arguments
+    shell:
+      cmd: grep -Pl -- '\bpam_faillock\.so\h+([^#\n\r]+\h+)?deny\b' /usr/share/pam-configs/*
+    register: grep_result
+    changed_when: false
+    check_mode: no
+    failed_when: false
+
+  - name: 5.3.3.1.1 | Ensure password failed attempts lockout is configured | Edit files to remove deny=<N> arguments
+    replace:
+      path: "{{ item }}"
+      regexp: '(\bpam_faillock\.so\b.*\b)deny=\d+'
+      replace: '\1'
+    loop: "{{ grep_result.stdout_lines }}"
+    when: grep_result.stdout_lines | length > 0
+  tags:
+  - level1-server
+  - level1-workstation
+  - automated
+  - patch
+  - 5.3.3.1.1
+
+- name: 5.3.3.1.2 | Ensure password unlock time is configured
+  block:
+  - name: 5.3.3.1.2 | Ensure password unlock time is configured | Configure /etc/security/faillock.conf
+    lineinfile:
+      path: /etc/security/faillock.conf
+      regexp: "^unlock_time"
+      line: "unlock_time = 900"
+      insertafter: '^# end of pam-auth-update config'
+      create: true
+  
+  - name:  5.3.3.1.2 | Ensure password unlock time is configured | Find files containing pam_faillock.so with unlock_time=<N> arguments
+    shell:
+      cmd: grep -Pl -- '\bpam_faillock\.so\h+([^#\n\r]+\h+)?unlock_time\b' /usr/share/pam-configs/*
+    register: grep_result
+    changed_when: false
+    check_mode: no
+    failed_when: false
+
+  - name: 5.3.3.1.2 | Ensure password unlock time is configured | Edit files to remove unlock_time=<N> arguments
+    replace:
+      path: "{{ item }}"
+      regexp: '(\bpam_faillock\.so\b.*\b)unlock_time=\d+'
+      replace: '\1'
+    loop: "{{ grep_result.stdout_lines }}"
+    when: grep_result.stdout_lines | length > 0
+  tags:
+  - level1-server
+  - level1-workstation
+  - automated
+  - patch
+  - 5.3.3.1.2
+
+- name: 5.3.3.1.3 | Ensure password failed attempts lockout includes root account
+  block:
+  - name: 5.3.3.1.3 | Ensure password failed attempts lockout includes root account | Configure /etc/security/faillock.conf
+    lineinfile:
+      path: /etc/security/faillock.conf
+      regexp: "^root_unlock_time"
+      line: "root_unlock_time = 60"
+      insertafter: '^# end of pam-auth-update config'
+      create: true
+  
+  - name: 5.3.3.1.3 | Ensure password failed attempts lockout includes root account | Configure /etc/security/faillock.conf
+    lineinfile:
+      path: /etc/security/faillock.conf
+      regexp: "^# even_deny_root"
+      line: "even_deny_root"
+      insertafter: '^# end of pam-auth-update config'
+      create: true
+  
+  - name: 5.3.3.1.3 | Ensure password failed attempts lockout includes root account | Find files containing pam_faillock.so with even_deny_root or root_unlock_time
+    shell: >
+      grep -Pl -- '\bpam_faillock\.so\s+([^#\n\r]+\s+)?(even_deny_root|root_unlock_time)' /usr/share/pam-configs/*
+    register: grep_result
+    changed_when: false
+    failed_when: false
+
+  - name: 5.3.3.1.3 | Ensure password failed attempts lockout includes root account | Edit files to remove root_unlock_time=<N> arguments
+    replace:
+      path: "{{ item }}"
+      regexp: '(\bpam_faillock\.so\b.*\b)root_unlock_time=\d+'
+      replace: '\1'
+    loop: "{{ grep_result.stdout_lines }}"
+    when: "{{ grep_result.stdout_lines | length > 0 }}"
+  
+  - name: 5.3.3.1.3 | Ensure password failed attempts lockout includes root account | Edit files to remove even_deny_root arguments
+    replace:
+      path: "{{ item }}"
+      regexp: '(\bpam_faillock\.so\s+[^#\n\r]*)even_deny_root\s*'
+      replace: '\1'
+    loop: "{{ grep_result.stdout_lines }}"
+    when: "{{ grep_result.stdout_lines | length > 0 }}"
+  tags:
+  - level1-server
+  - level1-workstation
+  - automated
+  - patch
+  - 5.3.3.1.3
+
+- name: 5.3.3.2.1 | Ensure password number of changed characters is configured
+  block:
+  - name: 5.3.3.2.1 | Ensure password number of changed characters is configured | Configure /etc/security/pwquality.conf
+    lineinfile:
+      path: /etc/security/pwquality.conf
+      regexp: '^difok\s*='
+      line: 'difok = 2'
+      create: yes
+
+  - name:  5.3.3.2.1 | Ensure password number of changed characters is configured | Find files containing pam_pwquality.so with difok=<N> arguments
+    shell:
+      cmd: grep -Pl -- '\bpam_pwquality\.so\h+([^#\n\r]+\h+)?difok\b' /usr/share/pam-configs/*
+    register: grep_result
+    changed_when: false
+    check_mode: no
+    failed_when: false
+
+  - name: 5.3.3.2.1 | Ensure password number of changed characters is configured | Edit files to remove difok=<N> arguments
+    replace:
+      path: "{{ item }}"
+      regexp: '(\bpam_pwquality\.so\b.*\b)difok=\d+'
+      replace: '\1'
+    loop: "{{ grep_result.stdout_lines }}"
+    when: grep_result.stdout_lines | length > 0
+  tags:
+  - level1-server
+  - level1-workstation
+  - automated
+  - patch
+  - 5.3.3.2.1
+  
+- name: 5.3.3.2.2 | Ensure minimum password length is configured
+  block:
+  - name: 5.3.3.2.2 | Ensure minimum password length is configured | Configure /etc/security/pwquality.conf
+    lineinfile:
+      path: /etc/security/pwquality.conf
+      regexp: '^minlen\s*='
+      line: "minlen = {{ cis_pwquality_minlen }}"
+      create: yes
+
+  - name:  5.3.3.2.2 | Ensure minimum password length is configured | Find files containing pam_pwquality.so with minlen=<N> arguments
+    shell:
+      cmd: grep -Pl -- '\bpam_pwquality\.so\h+([^#\n\r]+\h+)?minlen\b' /usr/share/pam-configs/*
+    register: grep_result
+    changed_when: false
+    check_mode: no
+    failed_when: false
+
+  - name: 5.3.3.2.2 | Ensure minimum password length is configured | Edit files to remove minlen=<N> arguments
+    replace:
+      path: "{{ item }}"
+      regexp: '(\bpam_pwquality\.so\b.*\b)minlen=\d+'
+      replace: '\1'
+    loop: "{{ grep_result.stdout_lines }}"
+    when: grep_result.stdout_lines | length > 0
+  tags:
+  - level1-server
+  - level1-workstation
+  - automated
+  - patch
+  - 5.3.3.2.2
+
+- name: 5.3.3.2.3 | Ensure password complexity is configured
+  block:
+  - name: 5.3.3.2.3 | Ensure password complexity is configured | Configure /etc/security/pwquality.conf
+    lineinfile:
+      path: /etc/security/pwquality.conf
+      regexp: ^{{ item.key }}
+      line: "{{ item.key }} = {{ item.value }}"
+    loop: "{{ cis_pwquality }}"
+
+  - name:  5.3.3.2.3 | Ensure password complexity is configured | Find files containing pam_pwquality.so with minclass=<N> arguments
+    shell:
+      cmd: grep -Pl -- '\bpam_pwquality\.so\h+([^#\n\r]+\h+)?minclass\b' /usr/share/pam-configs/*
+    register: grep_result_minclass
+    changed_when: false
+    check_mode: no
+    failed_when: false
+
+  - name: 5.3.3.2.3 | Ensure password complexity is configured | Edit files to remove minclass=<N> arguments
+    replace:
+      path: "{{ item }}"
+      regexp: '(\bpam_pwquality\.so\b.*\b)minclass=\d+'
+      replace: '\1'
+    loop: "{{ grep_result_minclass.stdout_lines }}"
+    when: grep_result_minclass.stdout_lines | length > 0
+
+  - name:  5.3.3.2.3 | Ensure password complexity is configured | Find files containing pam_pwquality.so with dcredit=<N> arguments
+    shell:
+      cmd: grep -Pl -- '\bpam_pwquality\.so\h+([^#\n\r]+\h+)?dcredit\b' /usr/share/pam-configs/*
+    register: grep_result_dcredit
+    changed_when: false
+    check_mode: no
+    failed_when: false
+
+  - name: 5.3.3.2.3 | Ensure password complexity is configured | Edit files to remove dcredit=<N> arguments
+    replace:
+      path: "{{ item }}"
+      regexp: '(\bpam_pwquality\.so\b.*\b)dcredit=\d+'
+      replace: '\1'
+    loop: "{{ grep_result_dcredit.stdout_lines }}"
+    when: grep_result_dcredit.stdout_lines | length > 0
+  
+  - name:  5.3.3.2.3 | Ensure password complexity is configured | Find files containing pam_pwquality.so with ucredit=<N> arguments
+    shell:
+      cmd: grep -Pl -- '\bpam_pwquality\.so\h+([^#\n\r]+\h+)?ucredit\b' /usr/share/pam-configs/*
+    register: grep_result_ucredit
+    changed_when: false
+    check_mode: no
+    failed_when: false
+
+  - name: 5.3.3.2.3 | Ensure password complexity is configured | Edit files to remove ucredit=<N> arguments
+    replace:
+      path: "{{ item }}"
+      regexp: '(\bpam_pwquality\.so\b.*\b)ucredit=\d+'
+      replace: '\1'
+    loop: "{{ grep_result_ucredit.stdout_lines }}"
+    when: grep_result_ucredit.stdout_lines | length > 0
+  
+  - name:  5.3.3.2.3 | Ensure password complexity is configured | Find files containing pam_pwquality.so with lcredit=<N> arguments
+    shell:
+      cmd: grep -Pl -- '\bpam_pwquality\.so\h+([^#\n\r]+\h+)?lcredit\b' /usr/share/pam-configs/*
+    register: grep_result_lcredit
+    changed_when: false
+    check_mode: no
+    failed_when: false
+
+  - name: 5.3.3.2.3 | Ensure password complexity is configured | Edit files to remove lcredit=<N> arguments
+    replace:
+      path: "{{ item }}"
+      regexp: '(\bpam_pwquality\.so\b.*\b)lcredit=\d+'
+      replace: '\1'
+    loop: "{{ grep_result_lcredit.stdout_lines }}"
+    when: grep_result_lcredit.stdout_lines | length > 0
+  
+  - name:  5.3.3.2.3 | Ensure password complexity is configured | Find files containing pam_pwquality.so with ocredit=<N> arguments
+    shell:
+      cmd: grep -Pl -- '\bpam_pwquality\.so\h+([^#\n\r]+\h+)?ocredit\b' /usr/share/pam-configs/*
+    register: grep_result_ocredit
+    changed_when: false
+    check_mode: no
+    failed_when: false
+
+  - name: 5.3.3.2.3 | Ensure password complexity is configured | Edit files to remove ocredit=<N> arguments
+    replace:
+      path: "{{ item }}"
+      regexp: '(\bpam_pwquality\.so\b.*\b)ocredit=\d+'
+      replace: '\1'
+    loop: "{{ grep_result_ocredit.stdout_lines }}"
+    when: grep_result_ocredit.stdout_lines | length > 0
+  tags:
+  - level1-server
+  - level1-workstation
+  - automated
+  - patch
+  - 5.3.3.2.3
+
+- name: 5.3.3.2.4 | Ensure password same consecutive characters is configured
+  block:
+  - name: 5.3.3.2.4 | Ensure password same consecutive characters is configured | Configure /etc/security/pwquality.conf
+    lineinfile:
+      path: /etc/security/pwquality.conf
+      regexp: '^maxrepeat\s*='
+      line: "maxrepeat = {{ cis_pwquality_maxrepeat }}"
+      create: yes
+
+  - name:  5.3.3.2.4 | Ensure password same consecutive characters is configured | Find files containing pam_pwquality.so with maxrepeat=<N> arguments
+    shell:
+      cmd: grep -Pl -- '\bpam_pwquality\.so\h+([^#\n\r]+\h+)?maxrepeat\b' /usr/share/pam-configs/*
+    register: grep_result
+    changed_when: false
+    check_mode: no
+    failed_when: false
+
+  - name: 5.3.3.2.4 | Ensure password same consecutive characters is configured | Edit files to remove maxrepeat=<N> arguments
+    replace:
+      path: "{{ item }}"
+      regexp: '(\bpam_pwquality\.so\b.*\b)maxrepeat=\d+'
+      replace: '\1'
+    loop: "{{ grep_result.stdout_lines }}"
+    when: grep_result.stdout_lines | length > 0
+  tags:
+  - level1-server
+  - level1-workstation
+  - automated
+  - patch
+  - 5.3.3.2.4
+
+- name: 5.3.3.2.5 | Ensure password maximum sequential characters is configured
+  block:
+  - name: 5.3.3.2.5 | Ensure password maximum sequential characters is configured | Configure /etc/security/pwquality.conf
+    lineinfile:
+      path: /etc/security/pwquality.conf
+      regexp: '^maxsequence\s*='
+      line: "maxsequence = {{ cis_pwquality_maxsequence }}"
+      create: yes
+
+  - name:  5.3.3.2.5 | Ensure password maximum sequential characters is configured | Find files containing pam_pwquality.so with maxsequence=<N> arguments
+    shell:
+      cmd: grep -Pl -- '\bpam_pwquality\.so\h+([^#\n\r]+\h+)?maxsequence\b' /usr/share/pam-configs/*
+    register: grep_result
+    changed_when: false
+    check_mode: no
+    failed_when: false
+
+  - name: 5.3.3.2.5 | Ensure password maximum sequential characters is configured | Edit files to remove maxsequence=<N> arguments
+    replace:
+      path: "{{ item }}"
+      regexp: '(\bpam_pwquality\.so\b.*\b)maxsequence=\d+'
+      replace: '\1'
+    loop: "{{ grep_result.stdout_lines }}"
+    when: grep_result.stdout_lines | length > 0
+  tags:
+  - level1-server
+  - level1-workstation
+  - automated
+  - patch
+  - 5.3.3.2.5
+
+- name: 5.3.3.2.6 | Ensure password dictionary check is enabled
+  block:
+  - name: 5.3.3.2.6 | Ensure password dictionary check is enabled | Configure /etc/security/pwquality.conf
+    lineinfile:
+      path: /etc/security/pwquality.conf
+      regexp: '^dictcheck\s*='
+      line: "dictcheck = {{ cis_pwquality_dictcheck }}"
+      create: yes
+
+  - name:  5.3.3.2.6 | Ensure password dictionary check is enabled | Find files containing pam_pwquality.so with dictcheck=<N> arguments
+    shell:
+      cmd: grep -Pl -- '\bpam_pwquality\.so\h+([^#\n\r]+\h+)?dictcheck\b' /usr/share/pam-configs/*
+    register: grep_result
+    changed_when: false
+    check_mode: no
+    failed_when: false
+
+  - name: 5.3.3.2.6 | Ensure password dictionary check is enabled | Edit files to remove dictcheck=<N> arguments
+    replace:
+      path: "{{ item }}"
+      regexp: '(\bpam_pwquality\.so\b.*\b)dictcheck=\d+'
+      replace: '\1'
+    loop: "{{ grep_result.stdout_lines }}"
+    when: grep_result.stdout_lines | length > 0
+  tags:
+  - level1-server
+  - level1-workstation
+  - automated
+  - patch
+  - 5.3.3.2.6
+
+- name: 5.3.3.2.7 | Ensure password quality checking is enforced
+  block:
+  - name: 5.3.3.2.7 | Ensure password quality checking is enforced | Configure /etc/security/pwquality.conf
+    lineinfile:
+      path: /etc/security/pwquality.conf
+      regexp: '^enforcing\s*='
+      line: "enforcing = {{ cis_pwquality_enforcing }}"
+      create: yes
+
+  - name:  5.3.3.2.7 | Ensure password quality checking is enforced | Find files containing pam_pwquality.so with enforcing=<N> arguments
+    shell:
+      cmd: grep -Pl -- '\bpam_pwquality\.so\h+([^#\n\r]+\h+)?enforcing\b' /usr/share/pam-configs/*
+    register: grep_result
+    changed_when: false
+    check_mode: no
+    failed_when: false
+
+  - name: 5.3.3.2.7 | Ensure password quality checking is enforced | Edit files to remove enforcing=<N> arguments
+    replace:
+      path: "{{ item }}"
+      regexp: '(\bpam_pwquality\.so\b.*\b)enforcing=\d+'
+      replace: '\1'
+    loop: "{{ grep_result.stdout_lines }}"
+    when: grep_result.stdout_lines | length > 0
+  tags:
+  - level1-server
+  - level1-workstation
+  - automated
+  - patch
+  - 5.3.3.2.7
+
+- name: 5.3.3.2.8 | Ensure password quality is enforced for the root user
+  lineinfile:
+    path: /etc/security/pwquality.conf
+    regexp: '^enforce_for_root\s*'
+    line: "enforce_for_root"
+    create: yes
+  tags:
+  - level1-server
+  - level1-workstation
+  - automated
+  - patch
+  - 5.3.3.2.8
+
+- name: 5.3.3.3.1 | Ensure password history remember is configured
+  debug:
+    msg: "Included in 5.3.2.4"
+  tags:
+  - level1-server
+  - level1-workstation
+  - automated
+  - patch
+  - 5.3.3.3.1
+
+- name: 5.3.3.3.2 | Ensure password history is enforced for the root user
+  debug:
+    msg: "Included in 5.3.2.4"
+  tags:
+  - level1-server
+  - level1-workstation
+  - automated
+  - patch
+  - 5.3.3.3.2
+
+- name: 5.3.3.3.3 | Ensure pam_pwhistory includes use_authtok
+  debug:
+    msg: "Included in 5.3.2.4"
+  tags:
+  - level1-server
+  - level1-workstation
+  - automated
+  - patch
+  - 5.3.3.3.3
+
+- name: 5.3.3.4.1 | Ensure pam_unix does not include nullok
+  debug:
+    msg: "Included in 5.3.2.4"
+  tags:
+  - level1-server
+  - level1-workstation
+  - automated
+  - patch
+  - 5.3.3.4.1
+
+- name: 5.3.3.4.2 | Ensure pam_unix does not include remember
+  debug:
+    msg: "Included in 5.3.2.4"
+  tags:
+  - level1-server
+  - level1-workstation
+  - automated
+  - patch
+  - 5.3.3.4.2
+
+- name: 5.3.3.4.3 | Ensure pam_unix includes a strong password hashing algorithm
+  block:
+  - name: "5.3.3.4.3 | Ensure pam_unix includes a strong password hashing algorithm | Confirm pam_unix.so"
+    shell: grep -v ^# /etc/pam.d/common-password | grep -E "(yescrypt|md5|bigcrypt|sha256|sha512|blowfish)"
+    changed_when: false
+    failed_when: false
+    check_mode: false
+    register: cis_5_3_3_4_3_pam_unix_state
+
+  - name: "5.3.3.4.3 | Ensure pam_unix includes a strong password hashing algorithm | Set hashing if pam_unix.so exists"
+    community.general.pamd:
+      name: common-password
+      type: password
+      control: '[success=1 default=ignore]'
+      module_path: pam_unix.so
+      module_arguments: "{{ cis_passwd_hash_algo }}"
+      state: "{{ cis_passwd_setpam_hash_algo | ternary('args_present', 'args_absent') }}"
+    when:
+    - cis_5_3_3_4_3_pam_unix_state.stdout | length > 0
+  tags:
+  - level1-server
+  - level1-workstation
+  - automated
+  - patch
+  - 5.3.3.4.3
+
+- name: 5.3.3.4.4 | Ensure pam_unix includes use_authtok
+  debug:
+    msg: "Included in 5.3.2.4"
+  tags:
+  - level1-server
+  - level1-workstation
+  - automated
+  - patch
+  - 5.3.3.4.4

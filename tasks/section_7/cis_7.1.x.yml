@@ -1,0 +1,381 @@
+---
+
+- name: "7.1.1 | Ensure permissions on /etc/passwd are configured"
+  file:
+    path: /etc/passwd
+    owner: root
+    group: root
+    mode: '0644'
+  tags:
+  - level1-server
+  - level1-workstation
+  - patch
+  - permissions
+  - 7.1.1
+
+- name: "7.1.2 | Ensure permissions on /etc/passwd- are configured"
+  file:
+    path: /etc/passwd-
+    owner: root
+    group: root
+    mode: '0644'
+  tags:
+  - level1-server
+  - level1-workstation
+  - patch
+  - permissions
+  - 7.1.2
+
+- name: "7.1.3 | Ensure permissions on /etc/group are configured"
+  file:
+    path: /etc/group
+    owner: root
+    group: root
+    mode: '0644'
+  tags:
+  - level1-server
+  - level1-workstation
+  - patch
+  - permissions
+  - 7.1.3
+
+- name: "7.1.4 | Ensure permissions on /etc/group- are configured"
+  file:
+    path: /etc/group-
+    owner: root
+    group: root
+    mode: '0644'
+  tags:
+  - level1-server
+  - level1-workstation
+  - patch
+  - permissionss
+  - 7.1.4
+
+- name: "7.1.5 | Ensure permissions on /etc/shadow are configured"
+  file:
+    path: /etc/shadow
+    owner: root
+    group: root
+    mode: '0640'
+  tags:
+  - level1-server
+  - level1-workstation
+  - patch
+  - permissions
+  - 7.1.5
+
+- name: "7.1.6 | Ensure permissions on /etc/shadow- are configured"
+  file:
+    path: /etc/shadow-
+    owner: root
+    group: root
+    mode: '0640'
+  tags:
+  - level1-server
+  - level1-workstation
+  - patch
+  - permissions
+  - 7.1.6
+
+- name: "7.1.7 | Ensure permissions on /etc/gshadow are configured"
+  file:
+    path: /etc/gshadow
+    owner: root
+    group: root
+    mode: '0640'
+  tags:
+  - level1-server
+  - level1-workstation
+  - patch
+  - permissions
+  - 7.1.7
+
+- name: "7.1.8 | Ensure permissions on /etc/gshadow- are configured"
+  file:
+    path: /etc/gshadow-
+    owner: root
+    group: root
+    mode: '0640'
+  tags:
+  - level1-server
+  - level1-workstation
+  - patch
+  - permissions
+  - 7.1.8
+
+- name: "7.1.9 | Ensure permissions on /etc/shells are configured"
+  file:
+    path: /etc/shells
+    owner: root
+    group: root
+    mode: '0640'
+  tags:
+  - level1-server
+  - level1-workstation
+  - patch
+  - permissions
+  - 7.1.9
+
+- name: "7.1.10 | Ensure permissions on /etc/security/opasswd are configured"
+  block:
+  - name: "7.1.10 | Ensure permissions on /etc/security/opasswd are configured | Check if /etc/security/opasswd exists"
+    stat:
+      path: /etc/security/opasswd
+    register: opasswd
+
+  - name: "7.1.10 | Ensure permissions on /etc/security/opasswd are configured | Apply changes"
+    file:
+      path: /etc/security/opasswd
+      owner: root
+      group: root
+      mode: '0600'
+    when: opasswd.stat.exists
+  
+  - name: "7.1.10 | Ensure permissions on /etc/security/opasswd are configured | Check if /etc/security/opasswd.old exists"
+    stat:
+      path: /etc/security/opasswd.old
+    register: opasswd_old
+
+  - name: "7.1.10 | Ensure permissions on /etc/security/opasswd are configured | Apply changes"
+    file:
+      path: /etc/security/opasswd.old
+      owner: root
+      group: root
+      mode: '0600'
+    when: opasswd_old.stat.exists
+  tags:
+  - level1-server
+  - level1-workstation
+  - patch
+  - permissions
+  - 7.1.10
+
+- name: "7.1.11 | Ensure world writable files and directories are secured"
+  block:
+  - name: "7.1.11 | Ensure world writable files and directories are secured | Get list of world-writable files"
+    shell: df --local -P | awk {'if (NR!=1) print $6'} | xargs -I '{}' find '{}' -xdev -type f -perm -0002
+    failed_when: false
+    changed_when: false
+    register: world_writable_files
+
+  - name: "7.1.11 | Ensure world writable files and directories are secured | Adjust world-writable files if they exist"
+    file:
+      path: '{{ item }}'
+      mode: o-w
+      state: touch
+    loop: "{{ world_writable_files.stdout_lines }}"
+    when:
+    - world_writable_files.stdout_lines is defined
+    - cis_no_world_write_adjust
+  tags:
+  - level1-server
+  - level1-workstation
+  - patch
+  - files
+  - permissions
+  - 7.1.11
+
+- name: "7.1.12 | Ensure no files or directories without an owner and a group exist"
+  block:
+  - name: "7.1.12 | Ensure no files or directories without an owner and a group exist | Get unowned files or directories"
+    shell: find {{ item.mount }} -xdev -nouser -not -fstype nfs
+    changed_when: false
+    failed_when: false
+    register: unowned_items
+    with_items:
+    - "{{ ansible_facts.mounts }}"
+    loop_control:
+      label: "{{ item.mount }}"
+
+  - name: "7.1.12 | Ensure no files or directories without an owner and a group exist | Flatten no_user_items results for easier use"
+    set_fact:
+      unowned_items_flatten: "{{ unowned_items.results | map(attribute='stdout_lines') | flatten }}"
+    
+  - name: 7.1.12 | Ensure no files or directories without an owner and a group exist | Filter out whitelisted ITEM
+    set_fact:
+      unowned_items_filtered: >-
+        {{
+          unowned_items_flatten | reject('search', '^((' + '|'.join(cis_unowned_items_whitelist) + ')(/|$))') | list
+        }}
+
+  - name: "7.1.12 | Ensure no files or directories without an owner and a group exist | Alert on unowned files and directories"
+    debug:
+      msg:
+      - "Warning!! You have unowned files and are configured to not auto-remediate for this task"
+      - "Please review the files/directories below and assign an owner"
+      - "{{ unowned_items_filtered }}"
+    when:
+    - not cis_no_owner_adjust
+    - unowned_items_filtered | length > 0
+
+  - name: "7.1.12 | Ensure no files or directories without an owner and a group exist | Set unowned files/directories to configured owner"
+    file:
+      path: "{{ item }}"
+      owner: "{{ cis_unowned_owner }}"
+    with_items:
+    - "{{ unowned_items_filtered }}"
+    when:
+    - cis_no_owner_adjust
+    - unowned_items_filtered | length > 0
+
+  - name: "7.1.12 | Ensure no files or directories without an owner and a group exist | Get ungrouped files or directories"
+    shell: find {{ item.mount }} -xdev -nogroup -not -fstype nfs
+    changed_when: false
+    failed_when: false
+    register: ungrouped_items
+    with_items:
+    - "{{ ansible_facts.mounts }}"
+    loop_control:
+      label: "{{ item.mount }}"
+
+  - name: "7.1.12 | Ensure no files or directories without an owner and a group exist | Flatten ungrouped_items results for easier use"
+    set_fact:
+      ungrouped_items_flatten: "{{ ungrouped_items.results | map(attribute='stdout_lines') | flatten }}"
+
+  - name: 7.1.12 | Ensure no files or directories without an owner and a group exist | Filter out whitelisted ITEM
+    set_fact:
+      ungrouped_items_filtered: >-
+        {{
+          ungrouped_items_flatten | reject('search', '^((' + '|'.join(cis_ungrouped_items_whitelist) + ')(/|$))') | list
+        }}
+
+  - name: "7.1.12 | Ensure no files or directories without an owner and a group exist | Alert on ungrouped files and directories"
+    debug:
+      msg:
+      - "Warning!! You have ungrouped files/directories and are configured to not auto-remediate for this task"
+      - "Please review the files/directories below and assign a group"
+      - "{{ ungrouped_items_filtered }}"
+    when:
+    - not cis_no_group_adjust
+    - ungrouped_items_filtered | length > 0
+
+  - name: "7.1.12 | Ensure no files or directories without an owner and a group exist | Set ungrouped files/directories to configured group"
+    file:
+      path: "{{ item }}"
+      group: "{{ cis_ungrouped_group }}"
+    with_items:
+    - "{{ ungrouped_items_filtered }}"
+    when:
+    - cis_no_group_adjust
+    - ungrouped_items_filtered | length > 0
+
+  - name: "7.1.12 | Ensure no files or directories without an owner and a group exist | Warn Count"
+    import_tasks:
+      file: warning_facts.yml
+    when:
+    - not cis_no_group_adjust
+    - not cis_no_owner_adjust
+    - unowned_items_filtered | length > 0
+    - ungrouped_items_filtered | length > 0
+    vars:
+      warn_control_id: '7.1.12'
+  tags:
+  - level1-server
+  - level1-workstation
+  - automated
+  - patch
+  - 7.1.12
+  - permissions
+
+- name: "7.1.13 | Ensure SUID and SGID files are reviewed"
+  block:
+  - name: "7.1.13 | Ensure SUID and SGID files are reviewed | Find SUID executables"
+    shell: find {{ item.mount }} -xdev -type f -perm -4000 -not -fstype nfs
+    changed_when: false
+    failed_when: false
+    register: suid_executables
+    with_items:
+    - "{{ ansible_facts.mounts }}"
+    loop_control:
+      label: "{{ item.mount }}"
+
+  - name: "7.1.13 | Ensure SUID and SGID files are reviewed | Flatten suid_executables results for easier use"
+    set_fact:
+      suid_executables_flatten: "{{ suid_executables.results | map(attribute='stdout_lines') | flatten }}"
+  
+  - name: 7.1.13 | Ensure SUID and SGID files are reviewed | Filter out whitelisted ITEM
+    set_fact:
+      suid_executables_filtered: >-
+        {{
+          suid_executables_flatten | reject('search', '^((' + '|'.join(cis_suid_whitelist) + ')(/|$))') | list
+        }}
+
+  - name: "7.1.13 | Ensure SUID and SGID files are reviewed | Alert SUID executables exist"
+    debug:
+      msg:
+      - "Warning!! You have SUID executables"
+      - "The files are listed below, please confirm the integrity of these binaries"
+      - "{{ suid_executables_filtered }}"
+    when:
+    - suid_executables_filtered | length > 0
+    - not cis_suid_adjust
+
+  - name: "7.1.13 | Ensure SUID and SGID files are reviewed | Remove SUID bit"
+    file:
+      path: "{{ item }}"
+      mode: 'u-s'
+    with_items:
+    - "{{ suid_executables_filtered }}"
+    when:
+    - cis_suid_adjust
+    - suid_executables_filtered | length > 0
+
+  - name: "7.1.13 | Ensure SUID and SGID files are reviewed | Find SGID executables"
+    shell: find {{ item }} -xdev -type f -perm -2000 -not -fstype nfs
+    changed_when: false
+    failed_when: false
+    register: sgid_executables
+    with_items:
+    - "{{ ansible_facts.mounts }}"
+    loop_control:
+      label: "{{ item.mount }}"
+
+  - name: "7.1.13 | Ensure SUID and SGID files are reviewed | Flatten sgid_executables results for easier use"
+    set_fact:
+      sgid_executables_flatten: "{{ sgid_executables.results | map(attribute='stdout_lines') | flatten }}"
+
+  - name: "7.1.13 | Ensure SUID and SGID files are reviewed | Filter out whitelisted items"
+    set_fact:
+      sgid_executables_filtered: >-
+        {{
+          sgid_executables_flatten | reject('search', '^((' + '|'.join(cis_sgid_whitelist) + ')(/|$))') | list
+        }}
+
+  - name: "7.1.13 | Ensure SUID and SGID files are reviewed | Alert SGID executables exist"
+    debug:
+      msg:
+      - "Warning!! You have SGID executables"
+      - "The files are listed below, please review the integrity of these binaries"
+      - "{{ sgid_executables_filtered }}"
+    when:
+    - sgid_executables_filtered | length > 0
+    - not cis_sgid_adjust
+
+  - name: "7.1.13 | Ensure SUID and SGID files are reviewed | Remove SGID bit"
+    file:
+      path: "{{ item }}"
+      mode: 'g-s'
+    with_items:
+    - "{{ sgid_executables_filtered }}"
+    when:
+    - cis_sgid_adjust
+    - sgid_executables_filtered | length > 0
+
+  - name: "7.1.13 | Ensure SUID and SGID files are reviewed | Warn Count"
+    import_tasks:
+      file: warning_facts.yml
+    when:
+    - suid_executables_filtered | length > 0
+    - not cis_suid_adjust
+    - sgid_executables_filtered | length > 0
+    - not cis_sgid_adjust
+    vars:
+      warn_control_id: '7.1.13'
+  tags:
+  - level1-server
+  - level1-workstation
+  - manual
+  - audit
+  - 7.1.13
+  - permissions

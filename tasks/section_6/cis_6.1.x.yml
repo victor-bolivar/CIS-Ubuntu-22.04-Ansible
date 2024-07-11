@@ -1,0 +1,104 @@
+---
+
+- name: "6.1.1 | Ensure AIDE is installed"
+  block:
+  - name: "6.1.1 | Ensure AIDE is installed | Install packages"
+    package:
+      name: ['aide', 'aide-common']
+      state: present
+      update_cache: true
+    register: aide_added
+    when:
+    - "'aide' not in ansible_facts.packages or 'aide-common' not in ansible_facts.packages"
+
+  - name: "6.1.1 | Ensure AIDE is installed | Updates information about installed packages as facts"
+    package_facts:
+      manager: auto
+    when: aide_added.skipped is not defined
+
+  - name: 6.1.1 | Ensure AIDE is installed | Simplify AIDE checksums
+    lineinfile:
+      regexp: '^Checksums.*='
+      line: "Checksums = {{ aide_checksums }}"
+      path: "/etc/aide/aide.conf"
+      state: present
+    when: (aide_checksums is defined) and (aide_checksums| length > 0)
+
+  - name: Configure default AIDE excludes file
+    copy:
+      src: "files/6_1_1_local_excludes.txt"
+      dest: "/etc/aide/aide.conf.d/00_local_excludes"
+
+  - name: 6.1.1 | Ensure AIDE is installed | Add extra AIDE exclude paths
+    lineinfile:
+      line: "{{ item }}"
+      path: "/etc/aide/aide.conf.d/00_local_excludes"
+      state: present
+    loop: "{{ aide_exclude_paths }}"
+    when: (aide_exclude_paths is defined) and (aide_exclude_paths| length > 0)
+
+  - name: "6.1.1 | Ensure AIDE is installed | Check if AIDE database already exists"
+    stat:
+      path: /var/lib/aide/aide.db
+    register: aide_db_status
+
+  - name: "6.1.1 | Ensure AIDE is installed | If AIDE database already exists, just update it"
+    shell: aide -c /etc/aide/aide.conf --update && mv /var/lib/aide/aide.db.new /var/lib/aide/aide.db
+    when: aide_db_status.stat.exists
+    register: aide_update_result
+    failed_when: "aide_update_result.rc != 0 and 'AIDE found differences between database and filesystem' not in aide_update_result.stdout"
+
+  - name: "6.1.1 | Ensure AIDE is installed | Configure AIDE"
+    shell: aideinit && mv /var/lib/aide/aide.db.new /var/lib/aide/aide.db
+    when: not aide_db_status.stat.exists
+  when:
+  - cis_config_aide
+  tags:
+  - level1-server
+  - level1-workstation
+  - automated
+  - 6.1.1
+  - aide
+
+- name: "6.1.2 | Ensure filesystem integrity is regularly checked"
+  cron:
+    name: Run AIDE integrity check
+    cron_file: "{{ cis_aide_cron['cron_file'] }}"
+    user: "{{ cis_aide_cron['cron_user'] }}"
+    minute: "{{ cis_aide_cron['aide_minute'] | default('0') }}"
+    hour: "{{ cis_aide_cron['aide_hour'] | default('5') }}"
+    day: "{{ cis_aide_cron['aide_day'] | default('*') }}"
+    month: "{{ cis_aide_cron['aide_month'] | default('*') }}"
+    weekday: "{{ cis_aide_cron['aide_weekday'] | default('*') }}"
+    job: "{{ cis_aide_cron['aide_job'] }}"
+  when:
+  - cis_config_aide
+  tags:
+  - level1-server
+  - level1-workstation
+  - automated
+  - 6.1.2
+  - cron
+  - aide
+
+- name: "6.1.3 | Ensure cryptographic mechanisms are used to protect the integrity of audit tools"
+  lineinfile:
+    path: /etc/aide/aide.conf
+    regexp: "{{ item }}"
+    line: "{{ item }}"
+  loop:
+  - '# Audit tools'
+  - /sbin/auditctl p+i+n+u+g+s+b+acl+xattrs+sha512
+  - /sbin/auditd p+i+n+u+g+s+b+acl+xattrs+sha512
+  - /sbin/ausearch p+i+n+u+g+s+b+acl+xattrs+sha512
+  - /sbin/aureport p+i+n+u+g+s+b+acl+xattrs+sha512
+  - /sbin/autrace p+i+n+u+g+s+b+acl+xattrs+sha512
+  - /sbin/augenrules p+i+n+u+g+s+b+acl+xattrs+sha512
+  when:
+  - cis_config_aide
+  tags:
+  - level1-server
+  - level1-workstation
+  - patch
+  - auditd
+  - 6.1.3
