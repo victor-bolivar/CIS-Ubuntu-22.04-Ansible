@@ -127,6 +127,9 @@ cis_purge_apt: false
 # Possible values are `tmp_systemd` or `fstab`-
 expected_tmp_mnt: fstab
 
+## 1.2.2.1 | Ensure updates, patches, and additional security software are installed
+cis_upgrade_dist: true
+
 ## Controls 1.4.1 - Boot password
 #
 # THIS VARIABLE SHOULD BE CHANGED AND INCORPORATED INTO VAULT
