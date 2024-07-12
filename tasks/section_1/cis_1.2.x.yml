@@ -69,6 +69,8 @@
   - name: 1.2.2.1 | Ensure updates, patches, and additional security software are installed | Upgrade all packages
     apt:
       upgrade: dist
+    when:
+    - cis_upgrade_dist
   tags:
   - level1-server
   - level1-workstation

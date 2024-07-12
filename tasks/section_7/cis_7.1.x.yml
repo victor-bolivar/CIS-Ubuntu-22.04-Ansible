@@ -163,7 +163,6 @@
     file:
       path: '{{ item }}'
       mode: o-w
-      state: touch
     loop: "{{ world_writable_files.stdout_lines }}"
     when:
     - world_writable_files.stdout_lines is defined
