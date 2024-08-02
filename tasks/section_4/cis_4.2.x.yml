@@ -1,5 +1,4 @@
 ---
-
 # ---------------
 # ---------------
 # NFTables is unsupported with this role. However I have the actions commented out as a guide
@@ -7,224 +6,224 @@
 # ---------------
 - name: "4.2.1 | Ensure nftables is installed"
   block:
-  - name: "4.2.1 | Ensure nftables is installed | Message out warning"
-    debug:
-      msg: "Warning!! NFTables is not supported in this role. Please use UFW, iptables, or manually manage nftables"
+    - name: "4.2.1 | Ensure nftables is installed | Message out warning"
+      debug:
+        msg: "Warning!! NFTables is not supported in this role. Please use UFW, iptables, or manually manage nftables"
 
-  - name: "4.2.1 | Ensure nftables is installed | Set warning count"
-    import_tasks:
-      file: warning_facts.yml
+    - name: "4.2.1 | Ensure nftables is installed | Set warning count"
+      import_tasks:
+        file: warning_facts.yml
   vars:
-    warn_control_id: '4.2.1'
+    warn_control_id: "4.2.1"
   when:
-  - cis_firewall_package == "nftables"
+    - cis_firewall_package == "nftables"
   tags:
-  - level1-server
-  - level1-workstation
-  - automated
-  - audit
-  - 4.2.1
-  - nftables
+    - level1-server
+    - level1-workstation
+    - automated
+    - audit
+    - 4.2.1
+    - nftables
 
 - name: "4.2.2 | Ensure ufw is uninstalled or disabled with nftables"
   block:
-  - name: "4.2.2 | Ensure ufw is uninstalled or disabled with nftables | Message out warning"
-    debug:
-      msg: "Warning!! NFTables is not supported in this role. Please use UFW, iptables, or manually manage nftables"
-      # package:
-      #     name: ufw
-      #     state: absent
+    - name: "4.2.2 | Ensure ufw is uninstalled or disabled with nftables | Message out warning"
+      debug:
+        msg: "Warning!! NFTables is not supported in this role. Please use UFW, iptables, or manually manage nftables"
+        # package:
+        #     name: ufw
+        #     state: absent
 
-  - name: "4.2.2 | Ensure ufw is uninstalled or disabled with nftables | Set warning count"
-    import_tasks:
-      file: warning_facts.yml
+    - name: "4.2.2 | Ensure ufw is uninstalled or disabled with nftables | Set warning count"
+      import_tasks:
+        file: warning_facts.yml
   vars:
-    warn_control_id: '4.2.2'
+    warn_control_id: "4.2.2"
   when:
-  - cis_firewall_package == "nftables"
+    - cis_firewall_package == "nftables"
   tags:
-  - level1-server
-  - level1-workstation
-  - automated
-  - audit
-  - 4.2.2
-  - nftables
+    - level1-server
+    - level1-workstation
+    - automated
+    - audit
+    - 4.2.2
+    - nftables
 
 - name: "4.2.3 | Ensure iptables are flushed with nftables"
   block:
-  - name: "4.2.3 | Ensure iptables are flushed with nftables | Message out warning"
-    debug:
-      msg: "Warning!! NFTables is not supported in this role. Please use UFW, iptables, or manually manage nftables"
-      # iptables:
-      #     flush: yes
+    - name: "4.2.3 | Ensure iptables are flushed with nftables | Message out warning"
+      debug:
+        msg: "Warning!! NFTables is not supported in this role. Please use UFW, iptables, or manually manage nftables"
+        # iptables:
+        #     flush: yes
 
-  - name: "4.2.3 | Ensure iptables are flushed with nftables | Set warning count"
-    import_tasks:
-      file: warning_facts.yml
+    - name: "4.2.3 | Ensure iptables are flushed with nftables | Set warning count"
+      import_tasks:
+        file: warning_facts.yml
   vars:
-    warn_control_id: '4.2.3'
+    warn_control_id: "4.2.3"
   when:
-  - cis_firewall_package == "nftables"
+    - cis_firewall_package == "nftables"
   tags:
-  - level1-server
-  - level1-workstation
-  - manual
-  - audit
-  - 4.2.3
-  - nftables
+    - level1-server
+    - level1-workstation
+    - manual
+    - audit
+    - 4.2.3
+    - nftables
 
 - name: "4.2.4 | Ensure a nftables table exists"
   block:
-  - name: "4.2.4 | Ensure a nftables table exists"
-    debug:
-      msg: "Warning!! NFTables is not supported in this role. Please use UFW, iptables, or manually manage nftables | Message out warning"
-      # shell: "nft create table {{ cis_nftables_table_name }}"
-      # changed_when: cis_4_2_4_new_table.rc == 0
-      # failed_when: false
-      # check_mode: false
-      # register: cis_4_2_4_new_table
+    - name: "4.2.4 | Ensure a nftables table exists"
+      debug:
+        msg: "Warning!! NFTables is not supported in this role. Please use UFW, iptables, or manually manage nftables | Message out warning"
+        # shell: "nft create table {{ cis_nftables_table_name }}"
+        # changed_when: cis_4_2_4_new_table.rc == 0
+        # failed_when: false
+        # check_mode: false
+        # register: cis_4_2_4_new_table
 
-  - name: "4.2.4 | Ensure a nftables table exists | Set warning count"
-    import_tasks:
-      file: warning_facts.yml
+    - name: "4.2.4 | Ensure a nftables table exists | Set warning count"
+      import_tasks:
+        file: warning_facts.yml
   vars:
-    warn_control_id: '4.2.4'
+    warn_control_id: "4.2.4"
   when:
-  - cis_firewall_package == "nftables"
+    - cis_firewall_package == "nftables"
   tags:
-  - level1-server
-  - level1-workstation
-  - automated
-  - patch
-  - 4.2.4
-  - nftables
+    - level1-server
+    - level1-workstation
+    - automated
+    - patch
+    - 4.2.4
+    - nftables
 
 - name: "4.2.5 | Ensure nftables base chains exist"
   block:
-  - name: "4.2.5 | Ensure nftables base chains exist"
-    debug:
-      msg: "Warning!! NFTables is not supported in this role. Please use UFW, iptables, or manually manage nftables | Message out warning"
+    - name: "4.2.5 | Ensure nftables base chains exist"
+      debug:
+        msg: "Warning!! NFTables is not supported in this role. Please use UFW, iptables, or manually manage nftables | Message out warning"
 
-  - name: "4.2.5 | Ensure nftables base chains exist | Set warning count"
-    import_tasks:
-      file: warning_facts.yml
+    - name: "4.2.5 | Ensure nftables base chains exist | Set warning count"
+      import_tasks:
+        file: warning_facts.yml
   vars:
-    warn_control_id: '4.2.5'
+    warn_control_id: "4.2.5"
   when:
-  - cis_firewall_package == "nftables"
+    - cis_firewall_package == "nftables"
   tags:
-  - level1-server
-  - level1-workstation
-  - automated
-  - audit
-  - 4.2.5
-  - nftables
+    - level1-server
+    - level1-workstation
+    - automated
+    - audit
+    - 4.2.5
+    - nftables
 
 - name: "4.2.6 | Ensure nftables loopback traffic is configured"
   block:
-  - name: "4.2.6 | Ensure nftables loopback traffic is configured | Message out warning"
-    debug:
-      msg: "Warning!! NFTables is not supported in this role. Please use UFW, iptables, or manually manage nftables"
+    - name: "4.2.6 | Ensure nftables loopback traffic is configured | Message out warning"
+      debug:
+        msg: "Warning!! NFTables is not supported in this role. Please use UFW, iptables, or manually manage nftables"
 
-  - name: "4.2.6 | Ensure nftables loopback traffic is configured | Set warning count"
-    import_tasks:
-      file: warning_facts.yml
+    - name: "4.2.6 | Ensure nftables loopback traffic is configured | Set warning count"
+      import_tasks:
+        file: warning_facts.yml
   vars:
-    warn_control_id: '4.2.6'
+    warn_control_id: "4.2.6"
   when:
-  - cis_firewall_package == "nftables"
+    - cis_firewall_package == "nftables"
   tags:
-  - level1-server
-  - level1-workstation
-  - automated
-  - audit
-  - 4.2.6
-  - nftables
+    - level1-server
+    - level1-workstation
+    - automated
+    - audit
+    - 4.2.6
+    - nftables
 
 - name: "4.2.7 | Ensure nftables outbound and established connections are configured"
   block:
-  - name: "4.2.7 | Ensure nftables outbound and established connections are configured | Message out warning"
-    debug:
-      msg: "Warning!! NFTables is not supported in this role. Please use UFW, iptables, or manually manage nftables"
+    - name: "4.2.7 | Ensure nftables outbound and established connections are configured | Message out warning"
+      debug:
+        msg: "Warning!! NFTables is not supported in this role. Please use UFW, iptables, or manually manage nftables"
 
-  - name: "4.2.7 | Ensure nftables outbound and established connections are configured | Set warning count"
-    import_tasks:
-      file: warning_facts.yml
+    - name: "4.2.7 | Ensure nftables outbound and established connections are configured | Set warning count"
+      import_tasks:
+        file: warning_facts.yml
   vars:
-    warn_control_id: '4.2.7'
+    warn_control_id: "4.2.7"
   when:
-  - cis_firewall_package == "nftables"
+    - cis_firewall_package == "nftables"
   tags:
-  - level1-server
-  - level1-workstation
-  - manual
-  - audit
-  - 4.2.7
-  - nftables
+    - level1-server
+    - level1-workstation
+    - manual
+    - audit
+    - 4.2.7
+    - nftables
 
 - name: "4.2.8 | Ensure nftables default deny firewall policy"
   block:
-  - name: "4.2.8 | Ensure nftables default deny firewall policy | Message out warning"
-    debug:
-      msg: "Warning!! NFTables is not supported in this role. Please use UFW, iptables, or manually manage nftables"
+    - name: "4.2.8 | Ensure nftables default deny firewall policy | Message out warning"
+      debug:
+        msg: "Warning!! NFTables is not supported in this role. Please use UFW, iptables, or manually manage nftables"
 
-  - name: "4.2.8 | Ensure nftables default deny firewall policy | Set warning count"
-    import_tasks:
-      file: warning_facts.yml
+    - name: "4.2.8 | Ensure nftables default deny firewall policy | Set warning count"
+      import_tasks:
+        file: warning_facts.yml
   vars:
-    warn_control_id: '4.2.8'
+    warn_control_id: "4.2.8"
   when:
-  - cis_firewall_package == "nftables"
+    - cis_firewall_package == "nftables"
   tags:
-  - level1-server
-  - level1-workstation
-  - automated
-  - audit
-  - 4.2.8
-  - nftables
+    - level1-server
+    - level1-workstation
+    - automated
+    - audit
+    - 4.2.8
+    - nftables
 
 - name: "4.2.9 | Ensure nftables service is enabled"
   block:
-  - name: "4.2.9 | Ensure nftables service is enabled | Message out warning"
-    debug:
-      msg: "Warning!! NFTables is not supported in this role. Please use UFW, iptables, or manually manage nftables"
-      # service:
-      #     name: nftables
-      #     state: started
-      #     enabled: yes
+    - name: "4.2.9 | Ensure nftables service is enabled | Message out warning"
+      debug:
+        msg: "Warning!! NFTables is not supported in this role. Please use UFW, iptables, or manually manage nftables"
+        # service:
+        #     name: nftables
+        #     state: started
+        #     enabled: yes
 
-  - name: "4.2.9 | Ensure nftables service is enabled | Set warning count"
-    import_tasks:
-      file: warning_facts.yml
+    - name: "4.2.9 | Ensure nftables service is enabled | Set warning count"
+      import_tasks:
+        file: warning_facts.yml
   vars:
-    warn_control_id: '4.2.9'
+    warn_control_id: "4.2.9"
   when:
-  - cis_firewall_package == "nftables"
+    - cis_firewall_package == "nftables"
   tags:
-  - level1-server
-  - level1-workstation
-  - automated
-  - audit
-  - 4.2.9
-  - nftables
+    - level1-server
+    - level1-workstation
+    - automated
+    - audit
+    - 4.2.9
+    - nftables
 
 - name: "4.2.10 | Ensure nftables rules are permanent"
   block:
-  - name: "4.2.10 | Ensure nftables rules are permanent | Message out warning"
-    debug:
-      msg: "Warning!! NFTables is not supported in this role. Please use UFW, iptables, or manually manage nftables"
+    - name: "4.2.10 | Ensure nftables rules are permanent | Message out warning"
+      debug:
+        msg: "Warning!! NFTables is not supported in this role. Please use UFW, iptables, or manually manage nftables"
 
-  - name: "4.2.10 | Ensure nftables rules are permanent | Set warning count"
-    import_tasks:
-      file: warning_facts.yml
+    - name: "4.2.10 | Ensure nftables rules are permanent | Set warning count"
+      import_tasks:
+        file: warning_facts.yml
   vars:
-    warn_control_id: '4.2.10'
+    warn_control_id: "4.2.10"
   when:
-  - cis_firewall_package == "nftables"
+    - cis_firewall_package == "nftables"
   tags:
-  - level1-server
-  - level1-workstation
-  - automated
-  - audit
-  - 4.2.10
-  - nftables
+    - level1-server
+    - level1-workstation
+    - automated
+    - audit
+    - 4.2.10
+    - nftables

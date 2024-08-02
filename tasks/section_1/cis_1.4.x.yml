@@ -1,54 +1,53 @@
 ---
-
 - name: "1.4.1 | Ensure bootloader password is set"
   block:
-  - name: "1.4.1 | Ensure bootloader password is set"
-    template:
-      src: etc/grub.d/00_user.j2
-      dest: "{{ cis_grub_user_file }}"
-      owner: root
-      group: root
-      mode: '0755'
-    notify: Grub update
+    - name: "1.4.1 | Ensure bootloader password is set"
+      template:
+        src: etc/grub.d/00_user.j2
+        dest: "{{ cis_grub_user_file }}"
+        owner: root
+        group: root
+        mode: "0755"
+      notify: Grub update
 
-  - name: "1.4.1 | Ensure bootloader password is set | allow unrestricted boot"
-    lineinfile:
-      path: "/etc/grub.d/10_linux"
-      regexp: '(^CLASS="--class gnu-linux --class gnu --class os).*"$'
-      line: '\g<1> --unrestricted"'
-      backrefs: true
-    notify: Grub update
-    when: not cis_ask_passwd_to_boot
+    - name: "1.4.1 | Ensure bootloader password is set | allow unrestricted boot"
+      lineinfile:
+        path: "/etc/grub.d/10_linux"
+        regexp: '(^CLASS="--class gnu-linux --class gnu --class os).*"$'
+        line: '\g<1> --unrestricted"'
+        backrefs: true
+      notify: Grub update
+      when: not cis_ask_passwd_to_boot
   when:
-  - cis_set_boot_pass
+    - cis_set_boot_pass
   tags:
-  - level1-server
-  - level1-workstation
-  - automated
-  - patch
-  - 1.4.1
-  - grub
+    - level1-server
+    - level1-workstation
+    - automated
+    - patch
+    - 1.4.1
+    - grub
 
 - name: "1.4.2 | Ensure permissions on bootloader config are configured"
   block:
-  - name: "1.4.2 | Ensure permissions on bootloader config are configured | Check for Grub file"
-    stat:
-      path: "{{ cis_grub_file }}"
-    check_mode: false
-    register: grub_cfg_status
+    - name: "1.4.2 | Ensure permissions on bootloader config are configured | Check for Grub file"
+      stat:
+        path: "{{ cis_grub_file }}"
+      check_mode: false
+      register: grub_cfg_status
 
-  - name: "1.4.2 | Ensure permissions on bootloader config are configured | Set permissions"
-    file:
+    - name: "1.4.2 | Ensure permissions on bootloader config are configured | Set permissions"
+      file:
         path: "{{ cis_grub_file }}"
         owner: root
         group: root
-        mode: '0400'
-    when:
-    - grub_cfg_status.stat.exists
+        mode: "0400"
+      when:
+        - grub_cfg_status.stat.exists
   tags:
-  - level1-server
-  - level1-workstation
-  - automated
-  - patch
-  - 1.4.2
-  - grub
+    - level1-server
+    - level1-workstation
+    - automated
+    - patch
+    - 1.4.2
+    - grub

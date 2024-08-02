@@ -1,76 +1,75 @@
 ---
-
 - name: "1.3.1.1 | Ensure AppArmor is installed"
   package:
-    name: ['apparmor', 'apparmor-utils']
+    name: ["apparmor", "apparmor-utils"]
     state: present
   when:
-  - "'apparmor' not in ansible_facts.packages or
-    'apparmor-utils' not in ansible_facts.packages"
+    - "'apparmor' not in ansible_facts.packages or
+      'apparmor-utils' not in ansible_facts.packages"
   tags:
-  - level1-server
-  - level1-workstation
-  - automated
-  - patch
-  - 1.3.1.1
-  - apparmor
+    - level1-server
+    - level1-workstation
+    - automated
+    - patch
+    - 1.3.1.1
+    - apparmor
 
 - name: "1.3.1.2 | Ensure AppArmor is enabled in the bootloader configuration"
   block:
-  - name: "1.3.1.2 | Ensure AppArmor is enabled in the bootloader configuration | Get current settings"
-    shell: grep "GRUB_CMDLINE_LINUX=" /etc/default/grub | cut -f2 -d'"'
-    changed_when: false
-    failed_when: false
-    check_mode: false
-    register: grup_cmdline_options
+    - name: "1.3.1.2 | Ensure AppArmor is enabled in the bootloader configuration | Get current settings"
+      shell: grep "GRUB_CMDLINE_LINUX=" /etc/default/grub | cut -f2 -d'"'
+      changed_when: false
+      failed_when: false
+      check_mode: false
+      register: grup_cmdline_options
 
-  - name: "1.3.1.2 | Ensure AppArmor is enabled in the bootloader configuration | Set apparmor settings if none exist"
-    lineinfile:
-      path: /etc/default/grub
-      regexp: ^(GRUB_CMDLINE_LINUX=")(|apparmor=\d\s)(.*\w+")
-      line: \1apparmor=1 \3
-      backrefs: true
-    notify: Grub update
-    when: grup_cmdline_options.stdout is not search('apparmor=')
+    - name: "1.3.1.2 | Ensure AppArmor is enabled in the bootloader configuration | Set apparmor settings if none exist"
+      lineinfile:
+        path: /etc/default/grub
+        regexp: ^(GRUB_CMDLINE_LINUX=")(|apparmor=\d\s)(.*\w+")
+        line: \1apparmor=1 \3
+        backrefs: true
+      notify: Grub update
+      when: grup_cmdline_options.stdout is not search('apparmor=')
 
-  - name: "1.3.1.2 | Ensure AppArmor is enabled in the bootloader configuration | Set security settings if none exist"
-    lineinfile:
-      path: /etc/default/grub
-      regexp: ^(GRUB_CMDLINE_LINUX=")(|security=\w+\s)(.*\w+")
-      line: \1security=apparmor \3
-      backrefs: true
-    notify: Grub update
-    when: grup_cmdline_options.stdout is not search('security=')
+    - name: "1.3.1.2 | Ensure AppArmor is enabled in the bootloader configuration | Set security settings if none exist"
+      lineinfile:
+        path: /etc/default/grub
+        regexp: ^(GRUB_CMDLINE_LINUX=")(|security=\w+\s)(.*\w+")
+        line: \1security=apparmor \3
+        backrefs: true
+      notify: Grub update
+      when: grup_cmdline_options.stdout is not search('security=')
 
-  - name: "1.3.1.2 | Ensure AppArmor is enabled in the bootloader configuration | Set apparmor settings if none exist"
-    lineinfile:
-      path: /etc/default/grub
-      regexp: '^GRUB_CMDLINE_LINUX='
-      line: 'GRUB_CMDLINE_LINUX="apparmor=1 security=apparmor {{ grup_cmdline_options.stdout }}"'
-      insertafter: '^GRUB_'
-    when:
-    - "'apparmor' not in grup_cmdline_options.stdout"
-    - "'security' not in grup_cmdline_options.stdout"
-    notify: Grub update
+    - name: "1.3.1.2 | Ensure AppArmor is enabled in the bootloader configuration | Set apparmor settings if none exist"
+      lineinfile:
+        path: /etc/default/grub
+        regexp: "^GRUB_CMDLINE_LINUX="
+        line: 'GRUB_CMDLINE_LINUX="apparmor=1 security=apparmor {{ grup_cmdline_options.stdout }}"'
+        insertafter: "^GRUB_"
+      when:
+        - "'apparmor' not in grup_cmdline_options.stdout"
+        - "'security' not in grup_cmdline_options.stdout"
+      notify: Grub update
 
-  - name: "1.3.1.2 | Ensure AppArmor is enabled in the bootloader configuration | Replace apparmor settings when exists"
-    replace:
-      path: /etc/default/grub
-      regexp: "{{ item.regexp }}"
-      replace: "{{ item.replace }}"
-    with_items:
-    - { regexp: 'apparmor=\w+', replace: 'apparmor=1' }
-    - { regexp: 'security=\w+', replace: 'security=apparmor' }
-    when:
-    - "'apparmor' in grup_cmdline_options.stdout or 'security' in grup_cmdline_options.stdout"
-    notify: Grub update
+    - name: "1.3.1.2 | Ensure AppArmor is enabled in the bootloader configuration | Replace apparmor settings when exists"
+      replace:
+        path: /etc/default/grub
+        regexp: "{{ item.regexp }}"
+        replace: "{{ item.replace }}"
+      with_items:
+        - { regexp: 'apparmor=\w+', replace: "apparmor=1" }
+        - { regexp: 'security=\w+', replace: "security=apparmor" }
+      when:
+        - "'apparmor' in grup_cmdline_options.stdout or 'security' in grup_cmdline_options.stdout"
+      notify: Grub update
   tags:
-  - level1-server
-  - level1-workstation
-  - automated
-  - patch
-  - 1.3.1.2
-  - apparmor
+    - level1-server
+    - level1-workstation
+    - automated
+    - patch
+    - 1.3.1.2
+    - apparmor
 
 # Controls 1.3.1.4 and 1.3.1.3 target the same setting and thus should not be run together.
 # Because control 1.3.1.4 is stricter than 1.3.1.3, we need to change the order --
@@ -78,90 +77,90 @@
 
 - name: "1.3.1.4 | Ensure all AppArmor Profiles are enforcing"
   block:
-  - name: "1.3.1.4 | Ensure all AppArmor Profiles are enforcing | Make sure that 1.3.1.3 is not run"
-    set_fact:
-      control_1_3_1_4_was_run: true
-      cis_apparmor_enforce_only: true
-    changed_when: false
+    - name: "1.3.1.4 | Ensure all AppArmor Profiles are enforcing | Make sure that 1.3.1.3 is not run"
+      set_fact:
+        control_1_3_1_4_was_run: true
+        cis_apparmor_enforce_only: true
+      changed_when: false
 
-  - name: "1.3.1.4 | Ensure all AppArmor Profiles are enforcing | Get pre apply enforce count"
-    shell: apparmor_status |  grep "profiles are in enforce mode" | tr -d -c 0-9
-    changed_when: false
-    failed_when: false
-    register: cis_1_3_1_4_pre_count
+    - name: "1.3.1.4 | Ensure all AppArmor Profiles are enforcing | Get pre apply enforce count"
+      shell: apparmor_status |  grep "profiles are in enforce mode" | tr -d -c 0-9
+      changed_when: false
+      failed_when: false
+      register: cis_1_3_1_4_pre_count
 
-  - name: "1.3.1.4 | Ensure all AppArmor Profiles are enforcing | Apply enforcing to /etc/apparmor.d profiles"
-    shell: aa-enforce /etc/apparmor.d/*
-    changed_when: false
-    failed_when: false
+    - name: "1.3.1.4 | Ensure all AppArmor Profiles are enforcing | Apply enforcing to /etc/apparmor.d profiles"
+      shell: aa-enforce /etc/apparmor.d/*
+      changed_when: false
+      failed_when: false
 
-  - name: "1.3.1.4 | Ensure all AppArmor Profiles are enforcing | Get post apply enforce count"
-    shell: apparmor_status |  grep "profiles are in enforce mode" | tr -d -c 0-9
-    changed_when: false
-    failed_when: false
-    register: cis_1_3_1_4_post_count
+    - name: "1.3.1.4 | Ensure all AppArmor Profiles are enforcing | Get post apply enforce count"
+      shell: apparmor_status |  grep "profiles are in enforce mode" | tr -d -c 0-9
+      changed_when: false
+      failed_when: false
+      register: cis_1_3_1_4_post_count
 
-  - name: "1.3.1.4 | Ensure all AppArmor Profiles are enforcing | This flags for idempotency"
-    debug:
-      msg: Changed! The profiles in /etc/apparmor.d were set to enforcing
-    changed_when: true
-    when: cis_1_3_1_4_pre_count.stdout != cis_1_3_1_4_post_count.stdout
+    - name: "1.3.1.4 | Ensure all AppArmor Profiles are enforcing | This flags for idempotency"
+      debug:
+        msg: Changed! The profiles in /etc/apparmor.d were set to enforcing
+      changed_when: true
+      when: cis_1_3_1_4_pre_count.stdout != cis_1_3_1_4_post_count.stdout
   when:
-  - not cis_apparmor_disable
+    - not cis_apparmor_disable
   tags:
-  - level2-server
-  - level2-workstation
-  - automated
-  - scored
-  - patch
-  - 1.3.1.4
-  - apparmor
+    - level2-server
+    - level2-workstation
+    - automated
+    - scored
+    - patch
+    - 1.3.1.4
+    - apparmor
 
 - name: "1.3.1.3 | Ensure all AppArmor Profiles are in enforce or complain mode"
   block:
-  - name: "1.3.1.3 | Ensure all AppArmor Profiles are in enforce or complain | Set cis_apparmor_enforce_only true for GOSS"
-    set_fact:
-      cis_apparmor_enforce_only: true
-    changed_when: false
-    when:
-    - cis_apparmor_mode == "enforce"
+    - name: "1.3.1.3 | Ensure all AppArmor Profiles are in enforce or complain | Set cis_apparmor_enforce_only true for GOSS"
+      set_fact:
+        cis_apparmor_enforce_only: true
+      changed_when: false
+      when:
+        - cis_apparmor_mode == "enforce"
 
-  - name: "1.3.1.3 | Ensure all AppArmor Profiles are in enforce or complain | Set cis_apparmor_enforce_only false for GOSS"
-    set_fact:
-      cis_apparmor_enforce_only: false
-    changed_when: false
-    when:
-    - cis_apparmor_mode == "complain"
+    - name: "1.3.1.3 | Ensure all AppArmor Profiles are in enforce or complain | Set cis_apparmor_enforce_only false for GOSS"
+      set_fact:
+        cis_apparmor_enforce_only: false
+      changed_when: false
+      when:
+        - cis_apparmor_mode == "complain"
 
-  - name: "1.3.1.3 | Ensure all AppArmor Profiles are in enforce or complain mode | Get pre apply enforce count"
-    shell: apparmor_status |  grep "profiles are in {{cis_apparmor_mode}} mode" | tr -d -c 0-9
-    changed_when: false
-    failed_when: false
-    register: cis_1_3_1_3_pre_count
+    - name: "1.3.1.3 | Ensure all AppArmor Profiles are in enforce or complain mode | Get pre apply enforce count"
+      shell: apparmor_status |  grep "profiles are in {{cis_apparmor_mode}} mode" | tr -d -c 0-9
+      changed_when: false
+      failed_when: false
+      register: cis_1_3_1_3_pre_count
 
-  - name: "1.3.1.3 | Ensure all AppArmor Profiles are in enforce or complain mode | Apply complaining/enforcing to /etc/apparmor.d profiles"
-    shell: aa-{{cis_apparmor_mode}} /etc/apparmor.d/*
-    changed_when: false
-    failed_when: false
+    - name: "1.3.1.3 | Ensure all AppArmor Profiles are in enforce or complain mode | Apply complaining/enforcing to /etc/apparmor.d profiles"
+      shell: aa-{{cis_apparmor_mode}} /etc/apparmor.d/*
+      changed_when: false
+      failed_when: false
 
-  - name: "1.3.1.3 | Ensure all AppArmor Profiles are in enforce or complain mode | Get post apply enforce count"
-    shell: apparmor_status |  grep "profiles are in {{cis_apparmor_mode}} mode" | tr -d -c 0-9
-    changed_when: false
-    failed_when: false
-    register: cis_1_3_1_3_post_count
+    - name: "1.3.1.3 | Ensure all AppArmor Profiles are in enforce or complain mode | Get post apply enforce count"
+      shell: apparmor_status |  grep "profiles are in {{cis_apparmor_mode}} mode" | tr -d -c 0-9
+      changed_when: false
+      failed_when: false
+      register: cis_1_3_1_3_post_count
 
-  - name: "1.3.1.3 | Ensure all AppArmor Profiles are in enforce or complain mode | This flags for idempotency"
-    debug:
-      msg: Changed! The profiles in /etc/apparmor.d were set to {{cis_apparmor_mode}} mode
-    changed_when: true
-    when: cis_1_3_1_3_pre_count.stdout != cis_1_3_1_3_post_count.stdout
+    - name: "1.3.1.3 | Ensure all AppArmor Profiles are in enforce or complain mode | This flags for idempotency"
+      debug:
+        msg: Changed! The profiles in /etc/apparmor.d were set to {{cis_apparmor_mode}} mode
+      changed_when: true
+      when: cis_1_3_1_3_pre_count.stdout != cis_1_3_1_3_post_count.stdout
   when:
-  - not cis_apparmor_disable
-  - not control_1_3_1_4_was_run
+    - not cis_apparmor_disable
+    - not control_1_3_1_4_was_run
   tags:
-  - level1-server
-  - level1-workstation
-  - automated
-  - patch
-  - 1.3.1.3
-  - apparmor
+    - level1-server
+    - level1-workstation
+    - automated
+    - patch
+    - 1.3.1.3
+    - apparmor

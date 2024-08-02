@@ -1,18 +1,17 @@
 ---
-
 - name: "4.3.1.1 | Ensure iptables packages are installed"
   package:
-    name: ['iptables', 'iptables-persistent']
+    name: ["iptables", "iptables-persistent"]
     state: present
   when:
-  - cis_firewall_package == "iptables"
+    - cis_firewall_package == "iptables"
   tags:
-  - level1-server
-  - level1-workstation
-  - automated
-  - patch
-  - 4.3.1.1
-  - iptables
+    - level1-server
+    - level1-workstation
+    - automated
+    - patch
+    - 4.3.1.1
+    - iptables
 
 - name: "4.3.1.2 | Ensure nftables is not installed with iptables"
   package:
@@ -20,14 +19,14 @@
     state: absent
     purge: "{{ cis_purge_apt }}"
   when:
-  - cis_firewall_package == "iptables"
+    - cis_firewall_package == "iptables"
   tags:
-  - level1-server
-  - level1-workstation
-  - automated
-  - patch
-  - 4.3.1.2
-  - iptables
+    - level1-server
+    - level1-workstation
+    - automated
+    - patch
+    - 4.3.1.2
+    - iptables
 
 - name: "4.3.1.3 | Ensure ufw is uninstalled or disabled with iptables"
   package:
@@ -35,167 +34,167 @@
     state: absent
     purge: "{{ cis_purge_apt }}"
   when:
-  - cis_firewall_package == "iptables"
+    - cis_firewall_package == "iptables"
   tags:
-  - level1-server
-  - level1-workstation
-  - automated
-  - patch
-  - 4.3.1.3
-  - iptables
+    - level1-server
+    - level1-workstation
+    - automated
+    - patch
+    - 4.3.1.3
+    - iptables
 
 - name: "4.3.2.1 | Ensure iptables default deny firewall policy"
   block:
-  - name: "4.3.2.1 | Ensure iptables default deny firewall policy | Configure SSH to be allowed in"
-    iptables:
-      chain: INPUT
-      protocol: tcp
-      destination_port: 22
-      jump: ACCEPT
-      ctstate: 'NEW,ESTABLISHED'
-    notify: Iptables persistent
+    - name: "4.3.2.1 | Ensure iptables default deny firewall policy | Configure SSH to be allowed in"
+      iptables:
+        chain: INPUT
+        protocol: tcp
+        destination_port: 22
+        jump: ACCEPT
+        ctstate: "NEW,ESTABLISHED"
+      notify: Iptables persistent
 
-  - name: "4.3.2.1 | Ensure iptables default deny firewall policy | Configure SSH to be allowed out"
-    iptables:
-      chain: OUTPUT
-      protocol: tcp
-      source_port: 22
-      jump: ACCEPT
-      ctstate: 'NEW,ESTABLISHED'
-    notify: Iptables persistent
+    - name: "4.3.2.1 | Ensure iptables default deny firewall policy | Configure SSH to be allowed out"
+      iptables:
+        chain: OUTPUT
+        protocol: tcp
+        source_port: 22
+        jump: ACCEPT
+        ctstate: "NEW,ESTABLISHED"
+      notify: Iptables persistent
 
-  - name: "4.3.2.1 | Ensure iptables default deny firewall policy | Enable apt traffic"
-    iptables:
-      chain: INPUT
-      ctstate: 'ESTABLISHED'
-      jump: ACCEPT
-    notify: Iptables persistent
+    - name: "4.3.2.1 | Ensure iptables default deny firewall policy | Enable apt traffic"
+      iptables:
+        chain: INPUT
+        ctstate: "ESTABLISHED"
+        jump: ACCEPT
+      notify: Iptables persistent
 
-  - name: "4.3.2.1 | Ensure iptables default deny firewall policy | Set drop items"
-    iptables:
-      policy: DROP
-      chain: "{{ item }}"
-    notify: Iptables persistent
-    with_items:
-    - INPUT
-    - FORWARD
-    - OUTPUT
+    - name: "4.3.2.1 | Ensure iptables default deny firewall policy | Set drop items"
+      iptables:
+        policy: DROP
+        chain: "{{ item }}"
+      notify: Iptables persistent
+      with_items:
+        - INPUT
+        - FORWARD
+        - OUTPUT
   when:
-  - cis_ipv4_required
-  - not system_is_ec2
-  - cis_firewall_package == "iptables"
+    - cis_ipv4_required
+    - not system_is_ec2
+    - cis_firewall_package == "iptables"
   tags:
-  - level1-server
-  - level1-workstation
-  - automated
-  - patch
-  - 4.3.2.1
-  - iptables
+    - level1-server
+    - level1-workstation
+    - automated
+    - patch
+    - 4.3.2.1
+    - iptables
 
 - name: "4.3.2.2 | Ensure iptables loopback traffic is configured"
   block:
-  - name: "4.3.2.2 | Ensure iptables loopback traffic is configured | INPUT loopback ACCEPT"
-    iptables:
-      action: append
-      chain: INPUT
-      in_interface: lo
-      jump: ACCEPT
-    notify: Iptables persistent
+    - name: "4.3.2.2 | Ensure iptables loopback traffic is configured | INPUT loopback ACCEPT"
+      iptables:
+        action: append
+        chain: INPUT
+        in_interface: lo
+        jump: ACCEPT
+      notify: Iptables persistent
 
-  - name: "4.3.2.2 | Ensure iptables loopback traffic is configured | OUTPUT loopback ACCEPT"
-    iptables:
-      action: append
-      chain: OUTPUT
-      out_interface: lo
-      jump: ACCEPT
-    notify: Iptables persistent
+    - name: "4.3.2.2 | Ensure iptables loopback traffic is configured | OUTPUT loopback ACCEPT"
+      iptables:
+        action: append
+        chain: OUTPUT
+        out_interface: lo
+        jump: ACCEPT
+      notify: Iptables persistent
 
-  - name: "4.3.2.2 | Ensure iptables loopback traffic is configured | OUTPUT loopback ACCEPT"
-    iptables:
-      action: append
-      chain: INPUT
-      source: 127.0.0.0/8
-      jump: DROP
-    notify: Iptables persistent
+    - name: "4.3.2.2 | Ensure iptables loopback traffic is configured | OUTPUT loopback ACCEPT"
+      iptables:
+        action: append
+        chain: INPUT
+        source: 127.0.0.0/8
+        jump: DROP
+      notify: Iptables persistent
   when:
-  - cis_firewall_package == "iptables"
-  - cis_ipv4_required
+    - cis_firewall_package == "iptables"
+    - cis_ipv4_required
   tags:
-  - level1-server
-  - level1-workstation
-  - automated
-  - patch
-  - 4.3.2.2
-  - iptables
+    - level1-server
+    - level1-workstation
+    - automated
+    - patch
+    - 4.3.2.2
+    - iptables
 
 - name: "4.3.2.3 | Ensure iptables outbound and established connections are configured"
   iptables:
     action: append
-    chain: '{{ item.chain }}'
-    protocol: '{{ item.protocol }}'
+    chain: "{{ item.chain }}"
+    protocol: "{{ item.protocol }}"
     match: state
-    ctstate: '{{ item.ctstate }}'
+    ctstate: "{{ item.ctstate }}"
     jump: ACCEPT
   notify: Iptables persistent
   with_items:
-  - { chain: OUTPUT, protocol: tcp, ctstate: 'NEW,ESTABLISHED' }
-  - { chain: OUTPUT, protocol: udp, ctstate: 'NEW,ESTABLISHED' }
-  - { chain: OUTPUT, protocol: icmp, ctstate: 'NEW,ESTABLISHED' }
-  - { chain: INPUT, protocol: tcp, ctstate: 'ESTABLISHED' }
-  - { chain: INPUT, protocol: udp, ctstate: 'ESTABLISHED' }
-  - { chain: INPUT, protocol: icmp, ctstate: 'ESTABLISHED' }
+    - { chain: OUTPUT, protocol: tcp, ctstate: "NEW,ESTABLISHED" }
+    - { chain: OUTPUT, protocol: udp, ctstate: "NEW,ESTABLISHED" }
+    - { chain: OUTPUT, protocol: icmp, ctstate: "NEW,ESTABLISHED" }
+    - { chain: INPUT, protocol: tcp, ctstate: "ESTABLISHED" }
+    - { chain: INPUT, protocol: udp, ctstate: "ESTABLISHED" }
+    - { chain: INPUT, protocol: icmp, ctstate: "ESTABLISHED" }
   when:
-  - cis_firewall_package == "iptables"
-  - cis_ipv4_required
+    - cis_firewall_package == "iptables"
+    - cis_ipv4_required
   tags:
-  - level1-server
-  - level1-workstation
-  - manual
-  - patch
-  - 4.3.2.3
-  - iptables
+    - level1-server
+    - level1-workstation
+    - manual
+    - patch
+    - 4.3.2.3
+    - iptables
 
 - name: "4.3.2.4 | Ensure iptables firewall rules exist for all open ports"
   block:
-  - name: "4.3.2.4 | Ensure iptables firewall rules exist for all open ports | Get list of open ports"
-    shell: ss -4tuln
-    changed_when: false
-    failed_when: false
-    check_mode: false
-    register: cis_4_3_2_4_open_ports
+    - name: "4.3.2.4 | Ensure iptables firewall rules exist for all open ports | Get list of open ports"
+      shell: ss -4tuln
+      changed_when: false
+      failed_when: false
+      check_mode: false
+      register: cis_4_3_2_4_open_ports
 
-  - name: "4.3.2.4 | Ensure iptables firewall rules exist for all open ports | Get list of rules"
-    shell: iptables -L INPUT -v -n
-    changed_when: false
-    failed_when: false
-    check_mode: false
-    register: cis_4_3_2_4_current_rules
+    - name: "4.3.2.4 | Ensure iptables firewall rules exist for all open ports | Get list of rules"
+      shell: iptables -L INPUT -v -n
+      changed_when: false
+      failed_when: false
+      check_mode: false
+      register: cis_4_3_2_4_current_rules
 
-  - name: "4.3.2.4 | Ensure iptables firewall rules exist for all open ports | Warn about settings"
-    debug:
-      msg:
-      - "Warning!! Below is the list the open ports and current rules"
-      - "Please create a rule for any open port that does not have a current rule"
-      - "Open Ports:"
-      - "{{ cis_4_3_2_4_open_ports.stdout_lines }}"
-      - "Current Rules:"
-      - "{{ cis_4_3_2_4_current_rules.stdout_lines }}"
+    - name: "4.3.2.4 | Ensure iptables firewall rules exist for all open ports | Warn about settings"
+      debug:
+        msg:
+          - "Warning!! Below is the list the open ports and current rules"
+          - "Please create a rule for any open port that does not have a current rule"
+          - "Open Ports:"
+          - "{{ cis_4_3_2_4_open_ports.stdout_lines }}"
+          - "Current Rules:"
+          - "{{ cis_4_3_2_4_current_rules.stdout_lines }}"
 
-  - name: "4.3.2.4 | Ensure iptables firewall rules exist for all open ports | Set warning count"
-    import_tasks:
-      file: warning_facts.yml
+    - name: "4.3.2.4 | Ensure iptables firewall rules exist for all open ports | Set warning count"
+      import_tasks:
+        file: warning_facts.yml
   vars:
-    warn_control_id: '4.3.2.4'
+    warn_control_id: "4.3.2.4"
   when:
-  - cis_firewall_package == "iptables"
-  - cis_ipv4_required
+    - cis_firewall_package == "iptables"
+    - cis_ipv4_required
   tags:
-  - level1-server
-  - level1-workstation
-  - automated
-  - audit
-  - 4.3.2.4
-  - iptables
+    - level1-server
+    - level1-workstation
+    - automated
+    - audit
+    - 4.3.2.4
+    - iptables
 
 # ---------------
 # ---------------
@@ -206,176 +205,176 @@
 # ---------------
 - name: "Make IPTables persistent | Not a control"
   block:
-  - name: "Make IPTables persistent | Install iptables-persistent"
-    package:
-      name: iptables-persistent
-      state: present
+    - name: "Make IPTables persistent | Install iptables-persistent"
+      package:
+        name: iptables-persistent
+        state: present
 
-  - name: "Make IPTables persistent | Save to persistent files"
-    shell: bash -c "iptables-save > /etc/iptables/rules.v4"
-    changed_when: cis_iptables_save.rc == 0
-    failed_when: cis_iptables_save.rc > 0
-    register: cis_iptables_save
+    - name: "Make IPTables persistent | Save to persistent files"
+      shell: bash -c "iptables-save > /etc/iptables/rules.v4"
+      changed_when: cis_iptables_save.rc == 0
+      failed_when: cis_iptables_save.rc > 0
+      register: cis_iptables_save
   when:
-  - cis_firewall_package == "iptables"
-  - cis_save_iptables_cis_rules
-  - cis_4_3_2_1 or
-    cis_4_3_2_2 or
-    cis_4_3_2_3 or
-    cis_4_3_2_4
+    - cis_firewall_package == "iptables"
+    - cis_save_iptables_cis_rules
+    - cis_4_3_2_1 or
+      cis_4_3_2_2 or
+      cis_4_3_2_3 or
+      cis_4_3_2_4
 
 - name: "4.3.3.1 | Ensure ip6tables default deny firewall policy"
   block:
-  - name: "4.3.3.1 | Ensure ip6tables default deny firewall policy | Configure SSH to be allowed out"
-    iptables:
-      chain: OUTPUT
-      protocol: tcp
-      source_port: 22
-      jump: ACCEPT
-      ctstate: 'NEW,ESTABLISHED'
-      ip_version: ipv6
-    notify: Ip6tables persistent
+    - name: "4.3.3.1 | Ensure ip6tables default deny firewall policy | Configure SSH to be allowed out"
+      iptables:
+        chain: OUTPUT
+        protocol: tcp
+        source_port: 22
+        jump: ACCEPT
+        ctstate: "NEW,ESTABLISHED"
+        ip_version: ipv6
+      notify: Ip6tables persistent
 
-  - name: "4.3.3.1 | Ensure ip6tables default deny firewall policy | Enable apt traffic"
-    iptables:
-      chain: INPUT
-      ctstate: 'ESTABLISHED'
-      jump: ACCEPT
-      ip_version: ipv6
-    notify: Ip6tables persistent
+    - name: "4.3.3.1 | Ensure ip6tables default deny firewall policy | Enable apt traffic"
+      iptables:
+        chain: INPUT
+        ctstate: "ESTABLISHED"
+        jump: ACCEPT
+        ip_version: ipv6
+      notify: Ip6tables persistent
 
-  - name: "4.3.3.1 | Ensure ip6tables default deny firewall policy | Set drop items"
-    iptables:
-      policy: DROP
-      chain: "{{ item }}"
-      ip_version: ipv6
-    notify: Ip6tables persistent
-    with_items:
-    - INPUT
-    - FORWARD
-    - OUTPUT
+    - name: "4.3.3.1 | Ensure ip6tables default deny firewall policy | Set drop items"
+      iptables:
+        policy: DROP
+        chain: "{{ item }}"
+        ip_version: ipv6
+      notify: Ip6tables persistent
+      with_items:
+        - INPUT
+        - FORWARD
+        - OUTPUT
   when:
-  - cis_ipv6_required
-  - cis_firewall_package == "iptables"
+    - cis_ipv6_required
+    - cis_firewall_package == "iptables"
   tags:
-  - level1-server
-  - level1-workstation
-  - automated
-  - patch
-  - 4.3.3.1
-  - ip6tables
+    - level1-server
+    - level1-workstation
+    - automated
+    - patch
+    - 4.3.3.1
+    - ip6tables
 
 - name: "4.3.3.2 | Ensure ip6tables loopback traffic is configured"
   block:
-  - name: "4.3.3.2 | Ensure ip6tables loopback traffic is configured | INPUT loopback ACCEPT"
-    iptables:
-      action: append
-      chain: INPUT
-      in_interface: lo
-      jump: ACCEPT
-      ip_version: ipv6
-    notify: Ip6tables persistent
+    - name: "4.3.3.2 | Ensure ip6tables loopback traffic is configured | INPUT loopback ACCEPT"
+      iptables:
+        action: append
+        chain: INPUT
+        in_interface: lo
+        jump: ACCEPT
+        ip_version: ipv6
+      notify: Ip6tables persistent
 
-  - name: "4.3.3.2 | Ensure ip6tables loopback traffic is configured | OUTPUT loopback ACCEPT"
-    iptables:
-      action: append
-      chain: OUTPUT
-      out_interface: lo
-      jump: ACCEPT
-      ip_version: ipv6
-    notify: Ip6tables persistent
+    - name: "4.3.3.2 | Ensure ip6tables loopback traffic is configured | OUTPUT loopback ACCEPT"
+      iptables:
+        action: append
+        chain: OUTPUT
+        out_interface: lo
+        jump: ACCEPT
+        ip_version: ipv6
+      notify: Ip6tables persistent
 
-  - name: "4.3.3.2 | Ensure ip6tables loopback traffic is configured | INPUT loopback drop"
-    iptables:
-      action: append
-      chain: INPUT
-      source: ::1
-      jump: DROP
-      ip_version: ipv6
-    notify: Ip6tables persistent
+    - name: "4.3.3.2 | Ensure ip6tables loopback traffic is configured | INPUT loopback drop"
+      iptables:
+        action: append
+        chain: INPUT
+        source: ::1
+        jump: DROP
+        ip_version: ipv6
+      notify: Ip6tables persistent
   when:
-  - cis_firewall_package == "iptables"
-  - cis_ipv6_required
-  - not cis_ipv4_required
+    - cis_firewall_package == "iptables"
+    - cis_ipv6_required
+    - not cis_ipv4_required
   tags:
-  - level1-server
-  - level1-workstation
-  - automated
-  - patch
-  - 4.3.3.2
-  - ip6tables
+    - level1-server
+    - level1-workstation
+    - automated
+    - patch
+    - 4.3.3.2
+    - ip6tables
 
 - name: "4.3.3.3 | Ensure ip6tables outbound and established connections are configured"
   iptables:
     action: append
-    chain: '{{ item.chain }}'
-    protocol: '{{ item.protocol }}'
+    chain: "{{ item.chain }}"
+    protocol: "{{ item.protocol }}"
     match: state
-    ctstate: '{{ item.ctstate }}'
+    ctstate: "{{ item.ctstate }}"
     jump: ACCEPT
     ip_version: ipv6
   notify: Ip6tables persistent
   with_items:
-  - { chain: OUTPUT, protocol: tcp, ctstate: 'NEW,ESTABLISHED' }
-  - { chain: OUTPUT, protocol: udp, ctstate: 'NEW,ESTABLISHED' }
-  - { chain: OUTPUT, protocol: icmp, ctstate: 'NEW,ESTABLISHED' }
-  - { chain: INPUT, protocol: tcp, ctstate: 'ESTABLISHED' }
-  - { chain: INPUT, protocol: udp, ctstate: 'ESTABLISHED' }
-  - { chain: INPUT, protocol: icmp, ctstate: 'ESTABLISHED' }
+    - { chain: OUTPUT, protocol: tcp, ctstate: "NEW,ESTABLISHED" }
+    - { chain: OUTPUT, protocol: udp, ctstate: "NEW,ESTABLISHED" }
+    - { chain: OUTPUT, protocol: icmp, ctstate: "NEW,ESTABLISHED" }
+    - { chain: INPUT, protocol: tcp, ctstate: "ESTABLISHED" }
+    - { chain: INPUT, protocol: udp, ctstate: "ESTABLISHED" }
+    - { chain: INPUT, protocol: icmp, ctstate: "ESTABLISHED" }
   when:
-  - cis_firewall_package == "iptables"
-  - cis_ipv6_required
-  - not cis_ipv4_required
+    - cis_firewall_package == "iptables"
+    - cis_ipv6_required
+    - not cis_ipv4_required
   tags:
-  - level1-server
-  - level1-workstation
-  - manual
-  - patch
-  - 4.3.3.3
-  - ip6tables
+    - level1-server
+    - level1-workstation
+    - manual
+    - patch
+    - 4.3.3.3
+    - ip6tables
 
 - name: "4.3.3.4 | Ensure ip6tables firewall rules exist for all open ports"
   block:
-  - name: "4.3.3.4 | Ensure ip6tables firewall rules exist for all open ports | Get list of open ports"
-    shell: ss -6tuln
-    changed_when: false
-    failed_when: false
-    check_mode: false
-    register: cis_4_3_3_4_open_ports
+    - name: "4.3.3.4 | Ensure ip6tables firewall rules exist for all open ports | Get list of open ports"
+      shell: ss -6tuln
+      changed_when: false
+      failed_when: false
+      check_mode: false
+      register: cis_4_3_3_4_open_ports
 
-  - name: "4.3.3.4 | Ensure ip6tables firewall rules exist for all open ports | Get list of rules"
-    shell: ip6tables -L INPUT -v -n
-    changed_when: false
-    failed_when: false
-    check_mode: false
-    register: cis_4_3_3_4_current_rules
+    - name: "4.3.3.4 | Ensure ip6tables firewall rules exist for all open ports | Get list of rules"
+      shell: ip6tables -L INPUT -v -n
+      changed_when: false
+      failed_when: false
+      check_mode: false
+      register: cis_4_3_3_4_current_rules
 
-  - name: "4.3.3.4 | Ensure ip6tables firewall rules exist for all open ports | Warn about settings"
-    debug:
-      msg:
-      - "Warning!! Below is the list the open ports and current rules"
-      - "Please create a rule for any open port that does not have a current rule"
-      - "Open Ports:"
-      - "{{ cis_4_3_3_4_open_ports.stdout_lines }}"
-      - "Current Rules:"
-      - "{{ cis_4_3_3_4_current_rules.stdout_lines }}"
+    - name: "4.3.3.4 | Ensure ip6tables firewall rules exist for all open ports | Warn about settings"
+      debug:
+        msg:
+          - "Warning!! Below is the list the open ports and current rules"
+          - "Please create a rule for any open port that does not have a current rule"
+          - "Open Ports:"
+          - "{{ cis_4_3_3_4_open_ports.stdout_lines }}"
+          - "Current Rules:"
+          - "{{ cis_4_3_3_4_current_rules.stdout_lines }}"
 
-  - name: "4.3.3.4 | Ensure ip6tables firewall rules exist for all open ports | Set warning count"
-    import_tasks:
-      file: warning_facts.yml
+    - name: "4.3.3.4 | Ensure ip6tables firewall rules exist for all open ports | Set warning count"
+      import_tasks:
+        file: warning_facts.yml
   vars:
-    warn_control_id: '4.3.3.4'
+    warn_control_id: "4.3.3.4"
   when:
-  - cis_firewall_package == "iptables"
-  - cis_ipv6_required
-  - not cis_ipv4_required
+    - cis_firewall_package == "iptables"
+    - cis_ipv6_required
+    - not cis_ipv4_required
   tags:
-  - level1-server
-  - level1-workstation
-  - automated
-  - audit
-  - 4.3.3.4
-  - ip6tables
+    - level1-server
+    - level1-workstation
+    - automated
+    - audit
+    - 4.3.3.4
+    - ip6tables
 
 # ---------------
 # ---------------
@@ -387,20 +386,19 @@
 # via handler
 - name: "Make IP6Tables persistent | Not a control"
   block:
-  - name: "Make IP6Tables persistent | Install iptables-persistent"
-    package:
-      name: iptables-persistent
-      state: present
-    when: "'iptables-persistent' not in ansible_facts.packages"
+    - name: "Make IP6Tables persistent | Install iptables-persistent"
+      package:
+        name: iptables-persistent
+        state: present
+      when: "'iptables-persistent' not in ansible_facts.packages"
 
-  - name: "Make IP6Tables persistent | Save to persistent files"
-    shell: bash -c "ip6tables-save > /etc/iptables/rules.v6"
-    changed_when: cis_ip6tables_save.rc == 0
-    failed_when: cis_ip6tables_save.rc > 0
-    register: cis_ip6tables_save
+    - name: "Make IP6Tables persistent | Save to persistent files"
+      shell: bash -c "ip6tables-save > /etc/iptables/rules.v6"
+      changed_when: cis_ip6tables_save.rc == 0
+      failed_when: cis_ip6tables_save.rc > 0
+      register: cis_ip6tables_save
   when:
-  - cis_firewall_package == "iptables"
-  - cis_ipv6_required
-  - not cis_ipv4_required
-  - cis_save_iptables_cis_rules
-  
+    - cis_firewall_package == "iptables"
+    - cis_ipv6_required
+    - not cis_ipv4_required
+    - cis_save_iptables_cis_rules

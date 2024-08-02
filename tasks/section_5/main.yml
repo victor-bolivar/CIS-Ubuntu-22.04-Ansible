@@ -1,17 +1,24 @@
 ---
-
 - name: "SECTION | 5.1 | Configure SSH Server"
   import_tasks:
     file: cis_5.1.x.yml
+  tags:
+    - section5.1
 
 - name: "SECTION | 5.2 | Configure privilege escalation"
   import_tasks:
     file: cis_5.2.x.yml
+  tags:
+    - section5.2
 
 - name: "SECTION | 5.3.x | Pluggable Authentication Modules"
   import_tasks:
     file: cis_5.3.x.yml
+  tags:
+    - section5.3
 
 - name: "SECTION | 5.4.x | User Accounts and Environment"
   import_tasks:
     file: cis_5.4.x.yml
+  tags:
+    - section5.4

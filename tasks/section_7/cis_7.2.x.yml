@@ -1,225 +1,224 @@
 ---
-
 - name: "7.2.1 | Ensure accounts in /etc/passwd use shadowed passwords"
   block:
-  - name: "7.2.1 | Ensure accounts in /etc/passwd use shadowed passwords | Get users not using shadowed passwords"
-    shell: awk -F':' '($2 != "x" ) { print $1}' /etc/passwd
-    changed_when: false
-    failed_when: false
-    check_mode: false
-    register: nonshadowed_users
+    - name: "7.2.1 | Ensure accounts in /etc/passwd use shadowed passwords | Get users not using shadowed passwords"
+      shell: awk -F':' '($2 != "x" ) { print $1}' /etc/passwd
+      changed_when: false
+      failed_when: false
+      check_mode: false
+      register: nonshadowed_users
 
-  - name: "7.2.1 | Ensure accounts in /etc/passwd use shadowed passwords | Warn on findings"
-    debug:
-      msg:
-      - "Warning!! You have users that are not using a shadowed password. Please convert the below accounts to use a shadowed password"
-      - "{{ nonshadowed_users.stdout_lines }}"
-    when: nonshadowed_users.stdout | length > 0
+    - name: "7.2.1 | Ensure accounts in /etc/passwd use shadowed passwords | Warn on findings"
+      debug:
+        msg:
+          - "Warning!! You have users that are not using a shadowed password. Please convert the below accounts to use a shadowed password"
+          - "{{ nonshadowed_users.stdout_lines }}"
+      when: nonshadowed_users.stdout | length > 0
 
-  - name: "7.2.1 | Ensure accounts in /etc/passwd use shadowed passwords | warn_count"
-    import_tasks:
-      file: warning_facts.yml
-    when: nonshadowed_users.stdout | length > 0
+    - name: "7.2.1 | Ensure accounts in /etc/passwd use shadowed passwords | warn_count"
+      import_tasks:
+        file: warning_facts.yml
+      when: nonshadowed_users.stdout | length > 0
   vars:
-    warn_control_id: '7.2.1'
+    warn_control_id: "7.2.1"
   tags:
-  - level1-server
-  - level1-workstation
-  - automated
-  - audit
-  - 7.2.1
-  - user_accounts
+    - level1-server
+    - level1-workstation
+    - automated
+    - audit
+    - 7.2.1
+    - user_accounts
 
 - name: "7.2.2 | Ensure /etc/shadow password fields are not empty"
   block:
-  - name: "7.2.2 | Ensure /etc/shadow password fields are not empty | Find users with no password"
-    shell: awk -F":" '($2 == "" ) { print $1 }' /etc/shadow
-    changed_when: false
-    check_mode: false
-    register: empty_password_acct
+    - name: "7.2.2 | Ensure /etc/shadow password fields are not empty | Find users with no password"
+      shell: awk -F":" '($2 == "" ) { print $1 }' /etc/shadow
+      changed_when: false
+      check_mode: false
+      register: empty_password_acct
 
-  - name: "7.2.2 | Ensure /etc/shadow password fields are not empty | Lock users with empty password"
-    user:
-      name: "{{ item }}"
-      password_lock: true
-    with_items:
-    - "{{ empty_password_acct.stdout_lines }}"
-    when: empty_password_acct.stdout | length > 0
+    - name: "7.2.2 | Ensure /etc/shadow password fields are not empty | Lock users with empty password"
+      user:
+        name: "{{ item }}"
+        password_lock: true
+      with_items:
+        - "{{ empty_password_acct.stdout_lines }}"
+      when: empty_password_acct.stdout | length > 0
   tags:
-  - level1-server
-  - level1-workstation
-  - automated
-  - patch
-  - 7.2.2
-  - user
-  - permissions
+    - level1-server
+    - level1-workstation
+    - automated
+    - patch
+    - 7.2.2
+    - user
+    - permissions
 
 - name: "7.2.3 | Ensure all groups in /etc/passwd exist in /etc/group"
   block:
-  - name: "7.2.3 | Ensure all groups in /etc/passwd exist in /etc/group | Check /etc/passwd entries"
-    shell: pwck -r | grep 'no group' | awk '{ gsub("[:\47]",""); print $2}'
-    changed_when: false
-    failed_when: false
-    check_mode: false
-    register: passwd_gid_check
+    - name: "7.2.3 | Ensure all groups in /etc/passwd exist in /etc/group | Check /etc/passwd entries"
+      shell: pwck -r | grep 'no group' | awk '{ gsub("[:\47]",""); print $2}'
+      changed_when: false
+      failed_when: false
+      check_mode: false
+      register: passwd_gid_check
 
-  - name: "7.2.3 | Ensure all groups in /etc/passwd exist in /etc/group | Print warning about users with invalid GIDs missing GID entries in /etc/group"
-    debug:
-      msg: "Warning!! The following users have non-existent GIDs (Groups): {{ passwd_gid_check.stdout_lines | join (', ') }}"
-    when: passwd_gid_check.stdout | length > 0
+    - name: "7.2.3 | Ensure all groups in /etc/passwd exist in /etc/group | Print warning about users with invalid GIDs missing GID entries in /etc/group"
+      debug:
+        msg: "Warning!! The following users have non-existent GIDs (Groups): {{ passwd_gid_check.stdout_lines | join (', ') }}"
+      when: passwd_gid_check.stdout | length > 0
 
-  - name: "7.2.3 | Ensure all groups in /etc/passwd exist in /etc/group | warn_count"
-    import_tasks:
-      file: warning_facts.yml
-    when: passwd_gid_check.stdout | length > 0
+    - name: "7.2.3 | Ensure all groups in /etc/passwd exist in /etc/group | warn_count"
+      import_tasks:
+        file: warning_facts.yml
+      when: passwd_gid_check.stdout | length > 0
   vars:
-    warn_control_id: '7.2.3'
+    warn_control_id: "7.2.3"
   tags:
-  - level1-server
-  - level1-workstation
-  - automated
-  - audit
-  - 7.2.3
-  - groups
+    - level1-server
+    - level1-workstation
+    - automated
+    - audit
+    - 7.2.3
+    - groups
 
 - name: "7.2.4 | Ensure shadow group is empty"
   block:
-  - name: "7.2.4 | Ensure shadow group is empty | check users in group"
-    getent:
-      database: group
-      split: ':'
-      key: shadow
+    - name: "7.2.4 | Ensure shadow group is empty | check users in group"
+      getent:
+        database: group
+        split: ":"
+        key: shadow
 
-  - name: "7.2.4 | Ensure shadow group is empty | check users in group"
-    debug:
-      msg: "Warning!! - You have users in the shadow group"
-    when: ansible_facts.getent_group.shadow[2] | length > 0
+    - name: "7.2.4 | Ensure shadow group is empty | check users in group"
+      debug:
+        msg: "Warning!! - You have users in the shadow group"
+      when: ansible_facts.getent_group.shadow[2] | length > 0
 
-  - name: "7.2.4 | Ensure shadow group is empty | check users in group"
-    import_tasks:
-      file: warning_facts.yml
-    when: ansible_facts.getent_group.shadow[2] | length > 0
+    - name: "7.2.4 | Ensure shadow group is empty | check users in group"
+      import_tasks:
+        file: warning_facts.yml
+      when: ansible_facts.getent_group.shadow[2] | length > 0
   vars:
-    warn_control_id: '7.2.4'
+    warn_control_id: "7.2.4"
   tags:
-  - level1-server
-  - level1-workstation
-  - automated
-  - patch
-  - 7.2.4
-  - user
+    - level1-server
+    - level1-workstation
+    - automated
+    - patch
+    - 7.2.4
+    - user
 
 - name: "7.2.5 | Ensure no duplicate UIDs exist"
   block:
-  - name: "7.2.5 | Ensure no duplicate UIDs exist | Check for duplicate UIDs"
-    shell: "pwck -r | awk -F: '{if ($3 in uid) print $1 ; else uid[$3]}' /etc/passwd"
-    changed_when: false
-    failed_when: false
-    check_mode: false
-    register: duplicate_uids_check
+    - name: "7.2.5 | Ensure no duplicate UIDs exist | Check for duplicate UIDs"
+      shell: "pwck -r | awk -F: '{if ($3 in uid) print $1 ; else uid[$3]}' /etc/passwd"
+      changed_when: false
+      failed_when: false
+      check_mode: false
+      register: duplicate_uids_check
 
-  - name: "7.2.5 | Ensure no duplicate UIDs exist | Print warning about users with duplicate UIDs"
-    debug:
-      msg: "Warning!! The following users have UIDs that are duplicates: {{ duplicate_uids_check.stdout_lines }}"
-    when: duplicate_uids_check.stdout | length > 0
+    - name: "7.2.5 | Ensure no duplicate UIDs exist | Print warning about users with duplicate UIDs"
+      debug:
+        msg: "Warning!! The following users have UIDs that are duplicates: {{ duplicate_uids_check.stdout_lines }}"
+      when: duplicate_uids_check.stdout | length > 0
 
-  - name: "7.2.5 | Ensure no duplicate UIDs exist | Set warning count"
-    import_tasks:
-      file: warning_facts.yml
-    when: duplicate_uids_check.stdout | length > 0
+    - name: "7.2.5 | Ensure no duplicate UIDs exist | Set warning count"
+      import_tasks:
+        file: warning_facts.yml
+      when: duplicate_uids_check.stdout | length > 0
   vars:
-    warn_control_id: '7.2.5'
+    warn_control_id: "7.2.5"
   tags:
-  - level1-server
-  - level1-workstation
-  - automated
-  - audit
-  - 7.2.5
-  - user
+    - level1-server
+    - level1-workstation
+    - automated
+    - audit
+    - 7.2.5
+    - user
 
 - name: "7.2.6 | Ensure no duplicate GIDs exist"
   block:
-  - name: "7.2.6 | Ensure no duplicate GIDs exist | Check for duplicate GIDs"
-    shell: "pwck -r | awk -F: '{if ($3 in users) print $1 ; else users[$3]}' /etc/group"
-    changed_when: false
-    failed_when: false
-    check_mode: false
-    register: duplicate_gids_check
+    - name: "7.2.6 | Ensure no duplicate GIDs exist | Check for duplicate GIDs"
+      shell: "pwck -r | awk -F: '{if ($3 in users) print $1 ; else users[$3]}' /etc/group"
+      changed_when: false
+      failed_when: false
+      check_mode: false
+      register: duplicate_gids_check
 
-  - name: "7.2.6 | Ensure no duplicate GIDs exist | Print warning about users with duplicate GIDs"
-    debug:
+    - name: "7.2.6 | Ensure no duplicate GIDs exist | Print warning about users with duplicate GIDs"
+      debug:
         msg: "Warning!! The following groups have duplicate GIDs: {{ cis_6_2_14_user_user_check.stdout_lines }}"
-    when: duplicate_gids_check.stdout | length > 0
+      when: duplicate_gids_check.stdout | length > 0
 
-  - name: "7.2.6 | Ensure no duplicate GIDs exist | Set warning count"
-    import_tasks:
+    - name: "7.2.6 | Ensure no duplicate GIDs exist | Set warning count"
+      import_tasks:
         file: warning_facts.yml
-    when: duplicate_gids_check.stdout | length > 0
+      when: duplicate_gids_check.stdout | length > 0
   vars:
-    warn_control_id: '7.2.6'
+    warn_control_id: "7.2.6"
   tags:
-  - level1-server
-  - level1-workstation
-  - automated
-  - audit
-  - 7.2.6
-  - groups
+    - level1-server
+    - level1-workstation
+    - automated
+    - audit
+    - 7.2.6
+    - groups
 
 - name: "7.2.7 | Ensure no duplicate user names exist"
   block:
-  - name: "7.2.7 | Ensure no duplicate user names exist | Check for duplicate User Names"
-    shell: "pwck -r | awk -F: '{if ($1 in users) print $1 ; else users[$1]}' /etc/passwd"
-    changed_when: false
-    failed_when: false
-    check_mode: false
-    register: duplicate_username_check
+    - name: "7.2.7 | Ensure no duplicate user names exist | Check for duplicate User Names"
+      shell: "pwck -r | awk -F: '{if ($1 in users) print $1 ; else users[$1]}' /etc/passwd"
+      changed_when: false
+      failed_when: false
+      check_mode: false
+      register: duplicate_username_check
 
-  - name: "7.2.7 | Ensure no duplicate user names exist | Print warning about users with duplicate User Names"
-    debug:
-      msg: "Warning!! The following user names are duplicates: {{ duplicate_username_check.stdout_lines }}"
-    when: duplicate_username_check.stdout | length > 0
+    - name: "7.2.7 | Ensure no duplicate user names exist | Print warning about users with duplicate User Names"
+      debug:
+        msg: "Warning!! The following user names are duplicates: {{ duplicate_username_check.stdout_lines }}"
+      when: duplicate_username_check.stdout | length > 0
 
-  - name: "7.2.7 | Ensure no duplicate user names exist | Set warning count"
-    import_tasks:
-      file: warning_facts.yml
-    when: duplicate_username_check.stdout | length > 0
+    - name: "7.2.7 | Ensure no duplicate user names exist | Set warning count"
+      import_tasks:
+        file: warning_facts.yml
+      when: duplicate_username_check.stdout | length > 0
   vars:
-    warn_control_id: '7.2.7'
+    warn_control_id: "7.2.7"
   tags:
-  - level1-server
-  - level1-workstation
-  - automated
-  - audit
-  - 7.2.7
-  - user
+    - level1-server
+    - level1-workstation
+    - automated
+    - audit
+    - 7.2.7
+    - user
 
 - name: "7.2.8 | Ensure no duplicate group names exist"
   block:
-  - name: "7.2.8 | Ensure no duplicate group names exist | Check for duplicate group names"
-    shell: 'getent passwd | cut -d: -f1 | sort -n | uniq -d'
-    changed_when: false
-    failed_when: false
-    check_mode: false
-    register: duplicate_group_check
+    - name: "7.2.8 | Ensure no duplicate group names exist | Check for duplicate group names"
+      shell: "getent passwd | cut -d: -f1 | sort -n | uniq -d"
+      changed_when: false
+      failed_when: false
+      check_mode: false
+      register: duplicate_group_check
 
-  - name: "7.2.8 | Ensure no duplicate group names exist | Print warning about users with duplicate group names"
-    debug:
-      msg: "Warning!! The following group names are duplicates: {{ duplicate_group_check.stdout_lines }}"
-    when: duplicate_group_check.stdout | length > 0
+    - name: "7.2.8 | Ensure no duplicate group names exist | Print warning about users with duplicate group names"
+      debug:
+        msg: "Warning!! The following group names are duplicates: {{ duplicate_group_check.stdout_lines }}"
+      when: duplicate_group_check.stdout | length > 0
 
-  - name: "7.2.8 | Ensure no duplicate group names exist | Set warning count"
-    import_tasks:
-      file: warning_facts.yml
-    when: duplicate_group_check.stdout | length > 0
+    - name: "7.2.8 | Ensure no duplicate group names exist | Set warning count"
+      import_tasks:
+        file: warning_facts.yml
+      when: duplicate_group_check.stdout | length > 0
   vars:
-    warn_control_id: '7.2.8'
+    warn_control_id: "7.2.8"
   tags:
-  - level1-server
-  - level1-workstation
-  - automated
-  - audit
-  - 7.2.8
-  - groups
+    - level1-server
+    - level1-workstation
+    - automated
+    - audit
+    - 7.2.8
+    - groups
 
 - name: "7.2.9 | Ensure local interactive user home directories are configured"
   file:
@@ -227,77 +226,76 @@
     state: directory
     owner: "{{ item.id }}"
     group: "{{ item.gid }}"
-    mode: '0750'
+    mode: "0750"
   loop: "{{ cis_passwd  | selectattr('uid', '>=', min_int_uid | int ) | selectattr('uid', '<=', max_int_uid | int ) | list }}"
   loop_control:
     label: "{{ item.id }}"
   when:
-  - item.uid >= min_int_uid | int
-  - item.id != 'nobody'
-  - (item.id != 'tss' and item.dir != '/dev/null')
-  - item.shell != '/sbin/nologin'
+    - item.uid >= min_int_uid | int
+    - item.id != 'nobody'
+    - (item.id != 'tss' and item.dir != '/dev/null')
+    - item.shell != '/sbin/nologin'
   tags:
-  - level1-server
-  - level1-workstation
-  - patch
-  - users
-  - 7.2.9
+    - level1-server
+    - level1-workstation
+    - patch
+    - users
+    - 7.2.9
 
 - name: "7.2.10 | Ensure local interactive user dot files access is configured"
   block:
-  - name: "7.2.10 | Ensure local interactive user dot files access is configured | Ensure no interactive users have .netrc files"
-    file:
-      dest: "{{ item }}/.netrc"
-      state: absent
-    with_items:
-    - "{{ interactive_users_home.stdout_lines }}"
-  
-  - name: "7.2.10 | Ensure local interactive user dot files access is configured | Ensure no interactive users have .forward files"
-    file:
-      dest: "{{ item }}/.forward"
-      state: absent
-    with_items:
-    - "{{ interactive_users_home.stdout_lines }}"
-  
-  - name: "7.2.10 | Ensure local interactive user dot files access is configured | Ensure no users have .rhosts files"
-    file:
-      dest: "{{ item }}/.rhosts"
-      state: absent
-    with_items:
-    - "{{ interactive_users_home.stdout_lines }}"
-  
-  - name: "7.2.10 | Ensure local interactive user dot files access is configured | Check for othe dot files"
-    shell: find /home/ -name "\.*" -perm /g+w,o+w
-    changed_when: false
-    failed_when: false
-    check_mode: false
-    register: dot_files
+    - name: "7.2.10 | Ensure local interactive user dot files access is configured | Ensure no interactive users have .netrc files"
+      file:
+        dest: "{{ item }}/.netrc"
+        state: absent
+      with_items:
+        - "{{ interactive_users_home.stdout_lines }}"
 
-  - name: "7.2.10 | Ensure local interactive user dot files access is configured | Changes files"
-    file:
-      path: '{{ item }}'
-      mode: go-w
-      owner: "{{ ( item | split('/') )[2] }}"
-      group: "{{ ( item | split('/') )[2] }}"
-    with_items: "{{ dot_files.stdout_lines }}"
-    when:
-    - dot_files.stdout | length > 0
-  
-  - name: "7.2.10 | Ensure local interactive user dot files access is configured | Ensure .bash_history has appropiate permissions"
-    file:
-      dest: "{{ item }}/.bash_history"
-      mode: 0600
-      state: touch
-    with_items:
-    - "{{ interactive_users_home.stdout_lines }}"
+    - name: "7.2.10 | Ensure local interactive user dot files access is configured | Ensure no interactive users have .forward files"
+      file:
+        dest: "{{ item }}/.forward"
+        state: absent
+      with_items:
+        - "{{ interactive_users_home.stdout_lines }}"
+
+    - name: "7.2.10 | Ensure local interactive user dot files access is configured | Ensure no users have .rhosts files"
+      file:
+        dest: "{{ item }}/.rhosts"
+        state: absent
+      with_items:
+        - "{{ interactive_users_home.stdout_lines }}"
+
+    - name: "7.2.10 | Ensure local interactive user dot files access is configured | Check for othe dot files"
+      shell: find /home/ -name "\.*" -perm /g+w,o+w
+      changed_when: false
+      failed_when: false
+      check_mode: false
+      register: dot_files
+
+    - name: "7.2.10 | Ensure local interactive user dot files access is configured | Changes files"
+      file:
+        path: "{{ item }}"
+        mode: go-w
+        owner: "{{ ( item | split('/') )[2] }}"
+        group: "{{ ( item | split('/') )[2] }}"
+      with_items: "{{ dot_files.stdout_lines }}"
+      when:
+        - dot_files.stdout | length > 0
+
+    - name: "7.2.10 | Ensure local interactive user dot files access is configured | Ensure .bash_history has appropiate permissions"
+      file:
+        dest: "{{ item }}/.bash_history"
+        mode: 0600
+        state: touch
+      with_items:
+        - "{{ interactive_users_home.stdout_lines }}"
   when:
-  - cis_disruption_high
-  - cis_dotperm_ansiblemanaged
+    - cis_disruption_high
+    - cis_dotperm_ansiblemanaged
   tags:
-  - level1-server
-  - level1-workstation
-  - automated
-  - patch
-  - 7.2.10
-  - user
-
+    - level1-server
+    - level1-workstation
+    - automated
+    - patch
+    - 7.2.10
+    - user

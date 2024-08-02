@@ -1,9 +1,12 @@
 ---
-
 - name: "SECTION | 7.1 | System File Permissions"
   import_tasks:
     file: cis_7.1.x.yml
+  tags:
+    - section7.1
 
 - name: "SECTION | 7.2 | Local User and Group Settings"
   import_tasks:
     file: cis_7.2.x.yml
+  tags:
+    - section7.2
