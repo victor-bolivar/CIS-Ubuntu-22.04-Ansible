@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+#!/usr/bin/bash
 {
 	l_output2=""
 	l_pmask="0022"

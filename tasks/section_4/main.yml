@@ -1,19 +1,24 @@
 ---
-
 - name: "SECTION | 4.1 | Configure UncomplicatedFirewall"
   import_tasks:
     file: cis_4.1.x.yml
   when:
-  - cis_firewall_package == "ufw"
+    - cis_firewall_package == "ufw"
+  tags:
+    - section4.1
 
 - name: "SECTION | 4.2 | Configure nftables"
   import_tasks:
     file: cis_4.2.x.yml
   when:
-  - cis_firewall_package == "nftables"
+    - cis_firewall_package == "nftables"
+  tags:
+    - section4.2
 
 - name: "SECTION | 4.3 | Configure iptables"
   import_tasks:
     file: cis_4.3.x.yml
   when:
-  - cis_firewall_package == "iptables"
+    - cis_firewall_package == "iptables"
+  tags:
+    - section4.2

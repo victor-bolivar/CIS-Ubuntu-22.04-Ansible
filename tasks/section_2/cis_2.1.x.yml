@@ -1,618 +1,618 @@
 - name: 2.1.1 | Ensure autofs services are not in use
   block:
-  - name: "2.1.1 | Ensure autofs services are not in use | Check for autofs service"
-    shell: "systemctl show autofs | grep LoadState | cut -d = -f 2"
-    register: autofs_service_status
-    changed_when: false
-    check_mode: false
+    - name: "2.1.1 | Ensure autofs services are not in use | Check for autofs service"
+      shell: "systemctl show autofs | grep LoadState | cut -d = -f 2"
+      register: autofs_service_status
+      changed_when: false
+      check_mode: false
 
-  - name: 2.1.1 | Ensure autofs services are not in use | Stop service
-    service:
-      name: autofs
-      state: stopped
-      enabled: false
-    when: autofs_service_status.stdout != "not-found"
-  
-  - name: 2.1.1 | Ensure autofs services are not in use | Purge autofs package
-    apt:
-      name: autofs
-      state: absent
-      purge: "{{ cis_purge_apt }}"
+    - name: 2.1.1 | Ensure autofs services are not in use | Stop service
+      service:
+        name: autofs
+        state: stopped
+        enabled: false
+      when: autofs_service_status.stdout != "not-found"
+
+    - name: 2.1.1 | Ensure autofs services are not in use | Purge autofs package
+      apt:
+        name: autofs
+        state: absent
+        purge: "{{ cis_purge_apt }}"
   tags:
-  - level1-server
-  - level2-workstation
-  - automated
-  - patch
-  - 2.1.1
-  - automounting
+    - level1-server
+    - level2-workstation
+    - automated
+    - patch
+    - 2.1.1
+    - automounting
 
 - name: 2.1.2 | Ensure avahi daemon services are not in use
   block:
-  - name: 2.1.2 | Ensure avahi daemon services are not in use | Check for avahi service
-    shell: "systemctl show avahi-daemon | grep LoadState | cut -d = -f 2"
-    register: avahi_service_status
-    changed_when: false
-    check_mode: false
+    - name: 2.1.2 | Ensure avahi daemon services are not in use | Check for avahi service
+      shell: "systemctl show avahi-daemon | grep LoadState | cut -d = -f 2"
+      register: avahi_service_status
+      changed_when: false
+      check_mode: false
 
-  - name: 2.1.2 | Ensure avahi daemon services are not in use | Stop avahi-daemon.socket
-    service:
-      name: avahi-daemon.socket
-      state: stopped
-      enabled: false
-    when: avahi_service_status.stdout != "not-found"
-  
-  - name: 2.1.2 | Ensure avahi daemon services are not in use | Stop avahi-daemon.service
-    service:
-      name: avahi-daemon.service
-      state: stopped
-      enabled: false
-    when: avahi_service_status.stdout != "not-found"
-  
-  - name: 2.1.2 | Ensure avahi daemon services are not in use | Purge avahi daemon package
-    apt:
-      name: avahi-daemon
-      state: absent
-      purge: "{{ cis_purge_apt }}"
+    - name: 2.1.2 | Ensure avahi daemon services are not in use | Stop avahi-daemon.socket
+      service:
+        name: avahi-daemon.socket
+        state: stopped
+        enabled: false
+      when: avahi_service_status.stdout != "not-found"
+
+    - name: 2.1.2 | Ensure avahi daemon services are not in use | Stop avahi-daemon.service
+      service:
+        name: avahi-daemon.service
+        state: stopped
+        enabled: false
+      when: avahi_service_status.stdout != "not-found"
+
+    - name: 2.1.2 | Ensure avahi daemon services are not in use | Purge avahi daemon package
+      apt:
+        name: avahi-daemon
+        state: absent
+        purge: "{{ cis_purge_apt }}"
   tags:
-  - level1-server
-  - level2-workstation
-  - automated
-  - patch
-  - 2.1.2
+    - level1-server
+    - level2-workstation
+    - automated
+    - patch
+    - 2.1.2
 
 - name: 2.1.3 | Ensure dhcp server services are not in use
   block:
-  - name: 2.1.3 | Ensure dhcp server services are not in use | Check for dhcp service
-    shell: "systemctl show isc-dhcp-server.service | grep LoadState | cut -d = -f 2"
-    register: dhcp_service_status
-    changed_when: false
-    check_mode: false
+    - name: 2.1.3 | Ensure dhcp server services are not in use | Check for dhcp service
+      shell: "systemctl show isc-dhcp-server.service | grep LoadState | cut -d = -f 2"
+      register: dhcp_service_status
+      changed_when: false
+      check_mode: false
 
-  - name: 2.1.3 | Ensure dhcp server services are not in use | Stop isc-dhcp-server.service
-    service:
-      name: isc-dhcp-server.service
-      state: stopped
-      enabled: false
-    when: dhcp_service_status.stdout != "not-found"
-  
-  - name: 2.1.3 | Ensure dhcp server 6 services are not in use | Check for dhcp 6 service
-    shell: "systemctl show isc-dhcp-server6.service | grep LoadState | cut -d = -f 2"
-    register: dhcp6_service_status
-    changed_when: false
-    check_mode: false
+    - name: 2.1.3 | Ensure dhcp server services are not in use | Stop isc-dhcp-server.service
+      service:
+        name: isc-dhcp-server.service
+        state: stopped
+        enabled: false
+      when: dhcp_service_status.stdout != "not-found"
 
-  - name: 2.1.3 | Ensure dhcp server services are not in use | Stop isc-dhcp-server6.service
-    service:
-      name: isc-dhcp-server6.service
-      state: stopped
-      enabled: false
-    when: dhcp6_service_status.stdout != "not-found"
-  
-  - name: 2.1.3 | Ensure dhcp server services are not in use | Purge dhcp server package
-    apt:
-      name: isc-dhcp-server
-      state: absent
-      purge: "{{ cis_purge_apt }}"
+    - name: 2.1.3 | Ensure dhcp server 6 services are not in use | Check for dhcp 6 service
+      shell: "systemctl show isc-dhcp-server6.service | grep LoadState | cut -d = -f 2"
+      register: dhcp6_service_status
+      changed_when: false
+      check_mode: false
+
+    - name: 2.1.3 | Ensure dhcp server services are not in use | Stop isc-dhcp-server6.service
+      service:
+        name: isc-dhcp-server6.service
+        state: stopped
+        enabled: false
+      when: dhcp6_service_status.stdout != "not-found"
+
+    - name: 2.1.3 | Ensure dhcp server services are not in use | Purge dhcp server package
+      apt:
+        name: isc-dhcp-server
+        state: absent
+        purge: "{{ cis_purge_apt }}"
   tags:
-  - level1-server
-  - level2-workstation
-  - automated
-  - patch
-  - 2.1.3
+    - level1-server
+    - level2-workstation
+    - automated
+    - patch
+    - 2.1.3
 
 - name: 2.1.4 | Ensure dns server services are not in use
   block:
-  - name: 2.1.4 | Ensure dns server services are not in use | Check dns service
-    shell: "systemctl show bind9.service | grep LoadState | cut -d = -f 2"
-    register: bind9_service_status
-    changed_when: false
-    check_mode: false
+    - name: 2.1.4 | Ensure dns server services are not in use | Check dns service
+      shell: "systemctl show bind9.service | grep LoadState | cut -d = -f 2"
+      register: bind9_service_status
+      changed_when: false
+      check_mode: false
 
-  - name: 2.1.4 | Ensure dns server services are not in use | Stop bind9.service
-    service:
-      name: bind9.service
-      state: stopped
-      enabled: false
-    when: bind9_service_status.stdout != "not-found"
-  
-  - name: 2.1.4 | Ensure dns server services are not in use | Purge dns server package
-    apt:
-      name: bind9
-      state: absent
-      purge: "{{ cis_purge_apt }}"
+    - name: 2.1.4 | Ensure dns server services are not in use | Stop bind9.service
+      service:
+        name: bind9.service
+        state: stopped
+        enabled: false
+      when: bind9_service_status.stdout != "not-found"
+
+    - name: 2.1.4 | Ensure dns server services are not in use | Purge dns server package
+      apt:
+        name: bind9
+        state: absent
+        purge: "{{ cis_purge_apt }}"
   tags:
-  - level1-server
-  - level2-workstation
-  - automated
-  - patch
-  - 2.1.4
+    - level1-server
+    - level2-workstation
+    - automated
+    - patch
+    - 2.1.4
 
 - name: 2.1.5 | Ensure dnsmasq services are not in use
   block:
-  - name: 2.1.5 | Ensure dnsmasq services are not in use | Check dnsmasq service
-    shell: "systemctl show dnsmasq.service | grep LoadState | cut -d = -f 2"
-    register: dnsmasq_service_status
-    changed_when: false
-    check_mode: false
+    - name: 2.1.5 | Ensure dnsmasq services are not in use | Check dnsmasq service
+      shell: "systemctl show dnsmasq.service | grep LoadState | cut -d = -f 2"
+      register: dnsmasq_service_status
+      changed_when: false
+      check_mode: false
 
-  - name: 2.1.5 | Ensure dnsmasq services are not in use | Stop dnsmasq.service
-    service:
-      name: dnsmasq.service
-      state: stopped
-      enabled: false
-    when: dnsmasq_service_status.stdout != "not-found"
-  
-  - name: 2.1.5 | Ensure dnsmasq services are not in use | Purge dnsmasq server package
-    apt:
-      name: dnsmasq
-      state: absent
-      purge: "{{ cis_purge_apt }}"
+    - name: 2.1.5 | Ensure dnsmasq services are not in use | Stop dnsmasq.service
+      service:
+        name: dnsmasq.service
+        state: stopped
+        enabled: false
+      when: dnsmasq_service_status.stdout != "not-found"
+
+    - name: 2.1.5 | Ensure dnsmasq services are not in use | Purge dnsmasq server package
+      apt:
+        name: dnsmasq
+        state: absent
+        purge: "{{ cis_purge_apt }}"
   tags:
-  - level1-server
-  - level2-workstation
-  - automated
-  - patch
-  - 2.1.5
+    - level1-server
+    - level2-workstation
+    - automated
+    - patch
+    - 2.1.5
 
 - name: 2.1.6 | Ensure ftp server services are not in use
   block:
-  - name: 2.1.6 | Ensure ftp server services are not in use | Check vsftpd service
-    shell: "systemctl show vsftpd.service | grep LoadState | cut -d = -f 2"
-    register: vsftpd_service_status
-    changed_when: false
-    check_mode: false
-    
-  - name: 2.1.6 | Ensure ftp server services are not in use | Stop vsftpd.service
-    service:
-      name: vsftpd.service
-      state: stopped
-      enabled: false
-    when: vsftpd_service_status.stdout != "not-found"
-  
-  - name: 2.1.6 | Ensure ftp server services are not in use | Purge vsftpd server package
-    apt:
-      name: vsftpd
-      state: absent
-      purge: "{{ cis_purge_apt }}"
+    - name: 2.1.6 | Ensure ftp server services are not in use | Check vsftpd service
+      shell: "systemctl show vsftpd.service | grep LoadState | cut -d = -f 2"
+      register: vsftpd_service_status
+      changed_when: false
+      check_mode: false
+
+    - name: 2.1.6 | Ensure ftp server services are not in use | Stop vsftpd.service
+      service:
+        name: vsftpd.service
+        state: stopped
+        enabled: false
+      when: vsftpd_service_status.stdout != "not-found"
+
+    - name: 2.1.6 | Ensure ftp server services are not in use | Purge vsftpd server package
+      apt:
+        name: vsftpd
+        state: absent
+        purge: "{{ cis_purge_apt }}"
   tags:
-  - level1-server
-  - level2-workstation
-  - automated
-  - patch
-  - 2.1.6
+    - level1-server
+    - level2-workstation
+    - automated
+    - patch
+    - 2.1.6
 
 - name: 2.1.7 | Ensure ldap server services are not in use
   block:
-  - name: 2.1.7 | Ensure ldap server services are not in use | Check ldap service
-    shell: "systemctl show slapd.service | grep LoadState | cut -d = -f 2"
-    register: slapd_service_status
-    changed_when: false
-    check_mode: false
+    - name: 2.1.7 | Ensure ldap server services are not in use | Check ldap service
+      shell: "systemctl show slapd.service | grep LoadState | cut -d = -f 2"
+      register: slapd_service_status
+      changed_when: false
+      check_mode: false
 
-  - name: 2.1.7 | Ensure ldap server services are not in use | Stop slapd.service
-    service:
-      name: slapd.service
-      state: stopped
-      enabled: false
-    when: slapd_service_status.stdout != "not-found"
-  
-  - name: 2.1.7 | Ensure ldap server services are not in use | Purge slapd server package
-    apt:
-      name: slapd
-      state: absent
-      purge: "{{ cis_purge_apt }}"
+    - name: 2.1.7 | Ensure ldap server services are not in use | Stop slapd.service
+      service:
+        name: slapd.service
+        state: stopped
+        enabled: false
+      when: slapd_service_status.stdout != "not-found"
+
+    - name: 2.1.7 | Ensure ldap server services are not in use | Purge slapd server package
+      apt:
+        name: slapd
+        state: absent
+        purge: "{{ cis_purge_apt }}"
   tags:
-  - level1-server
-  - level2-workstation
-  - automated
-  - patch
-  - 2.1.7
+    - level1-server
+    - level2-workstation
+    - automated
+    - patch
+    - 2.1.7
 
 - name: 2.1.8 | Ensure message access server services are not in use
   block:
-  - name: 2.1.8 | Ensure message access server services are not in use | Check dovecot.socket
-    shell: "systemctl show dovecot.socket | grep LoadState | cut -d = -f 2"
-    register: dovecot_socket_status
-    changed_when: false
-    check_mode: false
+    - name: 2.1.8 | Ensure message access server services are not in use | Check dovecot.socket
+      shell: "systemctl show dovecot.socket | grep LoadState | cut -d = -f 2"
+      register: dovecot_socket_status
+      changed_when: false
+      check_mode: false
 
-  - name: 2.1.8 | Ensure message access server services are not in use | Stop dovecot.socket
-    service:
-      name: dovecot.socket
-      state: stopped
-      enabled: false
-    when: dovecot_socket_status.stdout != "not-found"
-  
-  - name: 2.1.8 | Ensure message access server services are not in use | Check dovecot.service
-    shell: "systemctl show dovecot.service | grep LoadState | cut -d = -f 2"
-    register: dovecot_service_status
-    changed_when: false
-    check_mode: false
-  
-  - name: 2.1.8 | Ensure message access server services are not in use | Stop dovecot.service
-    service:
-      name: dovecot.service
-      state: stopped
-      enabled: false
-    when: dovecot_service_status.stdout != "not-found"
-  
-  - name: 2.1.8 | Ensure message access server services are not in use | Purge dovecot-imapd server package
-    apt:
-      name: dovecot-imapd
-      state: absent
-      purge: "{{ cis_purge_apt }}"
-  
-  - name: 2.1.8 | Ensure message access server services are not in use | Purge dovecot-pop3d server package
-    apt:
-      name: dovecot-pop3d
-      state: absent
-      purge: "{{ cis_purge_apt }}"
+    - name: 2.1.8 | Ensure message access server services are not in use | Stop dovecot.socket
+      service:
+        name: dovecot.socket
+        state: stopped
+        enabled: false
+      when: dovecot_socket_status.stdout != "not-found"
+
+    - name: 2.1.8 | Ensure message access server services are not in use | Check dovecot.service
+      shell: "systemctl show dovecot.service | grep LoadState | cut -d = -f 2"
+      register: dovecot_service_status
+      changed_when: false
+      check_mode: false
+
+    - name: 2.1.8 | Ensure message access server services are not in use | Stop dovecot.service
+      service:
+        name: dovecot.service
+        state: stopped
+        enabled: false
+      when: dovecot_service_status.stdout != "not-found"
+
+    - name: 2.1.8 | Ensure message access server services are not in use | Purge dovecot-imapd server package
+      apt:
+        name: dovecot-imapd
+        state: absent
+        purge: "{{ cis_purge_apt }}"
+
+    - name: 2.1.8 | Ensure message access server services are not in use | Purge dovecot-pop3d server package
+      apt:
+        name: dovecot-pop3d
+        state: absent
+        purge: "{{ cis_purge_apt }}"
   tags:
-  - level1-server
-  - level2-workstation
-  - automated
-  - patch
-  - 2.1.8
+    - level1-server
+    - level2-workstation
+    - automated
+    - patch
+    - 2.1.8
 
 - name: 2.1.9 | Ensure network file system services are not in use
   block:
-  - name: 2.1.9 | Ensure network file system services are not in use | Check nfs-server.service
-    shell: "systemctl show nfs-server.service | grep LoadState | cut -d = -f 2"
-    register: nfs_service_status
-    changed_when: false
-    check_mode: false
+    - name: 2.1.9 | Ensure network file system services are not in use | Check nfs-server.service
+      shell: "systemctl show nfs-server.service | grep LoadState | cut -d = -f 2"
+      register: nfs_service_status
+      changed_when: false
+      check_mode: false
 
-  - name: 2.1.9 | Ensure network file system services are not in use | Stop nfs-server.service
-    service:
-      name: nfs-server.service
-      state: stopped
-      enabled: false
-    when: nfs_service_status.stdout != "not-found"
+    - name: 2.1.9 | Ensure network file system services are not in use | Stop nfs-server.service
+      service:
+        name: nfs-server.service
+        state: stopped
+        enabled: false
+      when: nfs_service_status.stdout != "not-found"
 
-  - name: 2.1.9 | Ensure network file system services are not in use | Purge nfs-kernel-server server package
-    apt:
-      name: nfs-kernel-server
-      state: absent
-      purge: "{{ cis_purge_apt }}"
+    - name: 2.1.9 | Ensure network file system services are not in use | Purge nfs-kernel-server server package
+      apt:
+        name: nfs-kernel-server
+        state: absent
+        purge: "{{ cis_purge_apt }}"
   when:
-  - remove_NFS 
+    - remove_NFS
   tags:
-  - level1-server
-  - level2-workstation
-  - automated
-  - patch
-  - 2.1.9
+    - level1-server
+    - level2-workstation
+    - automated
+    - patch
+    - 2.1.9
 
 - name: 2.1.10 | Ensure nis server services are not in use
   block:
-  - name: 2.1.10 | Ensure nis server services are not in use | Check ypserv.service
-    shell: "systemctl show ypserv.service | grep LoadState | cut -d = -f 2"
-    register: nis_service_status
-    changed_when: false
-    check_mode: false
+    - name: 2.1.10 | Ensure nis server services are not in use | Check ypserv.service
+      shell: "systemctl show ypserv.service | grep LoadState | cut -d = -f 2"
+      register: nis_service_status
+      changed_when: false
+      check_mode: false
 
-  - name: 2.1.10 | Ensure nis server services are not in use | Stop ypserv.service
-    service:
-      name: ypserv.service
-      state: stopped
-      enabled: false
-    when: nis_service_status.stdout != "not-found"
-  
-  - name: 2.1.10 | Ensure nis server services are not in use | Purge ypserv server package
-    apt:
-      name: ypserv
-      state: absent
-      purge: "{{ cis_purge_apt }}"
+    - name: 2.1.10 | Ensure nis server services are not in use | Stop ypserv.service
+      service:
+        name: ypserv.service
+        state: stopped
+        enabled: false
+      when: nis_service_status.stdout != "not-found"
+
+    - name: 2.1.10 | Ensure nis server services are not in use | Purge ypserv server package
+      apt:
+        name: ypserv
+        state: absent
+        purge: "{{ cis_purge_apt }}"
   tags:
-  - level1-server
-  - level2-workstation
-  - automated
-  - patch
-  - 2.1.10
+    - level1-server
+    - level2-workstation
+    - automated
+    - patch
+    - 2.1.10
 
 - name: 2.1.11 | Ensure print server services are not in use
   block:
-  - name: 2.1.11 | Ensure print server services are not in use | Check cups.socket
-    shell: "systemctl show cups.socket | grep LoadState | cut -d = -f 2"
-    register: cubs_socket_service_status
-    changed_when: false
-    check_mode: false
+    - name: 2.1.11 | Ensure print server services are not in use | Check cups.socket
+      shell: "systemctl show cups.socket | grep LoadState | cut -d = -f 2"
+      register: cubs_socket_service_status
+      changed_when: false
+      check_mode: false
 
-  - name: 2.1.11 | Ensure print server services are not in use | Stop cups.socket
-    service:
-      name: cups.socket
-      state: stopped
-      enabled: false
-    when: cubs_socket_service_status.stdout != "not-found"
+    - name: 2.1.11 | Ensure print server services are not in use | Stop cups.socket
+      service:
+        name: cups.socket
+        state: stopped
+        enabled: false
+      when: cubs_socket_service_status.stdout != "not-found"
 
-  - name: 2.1.11 | Ensure print server services are not in use | Check cups.service
-    shell: "systemctl show cups.service | grep LoadState | cut -d = -f 2"
-    register: cubs_service_service_status
-    changed_when: false
-    check_mode: false
+    - name: 2.1.11 | Ensure print server services are not in use | Check cups.service
+      shell: "systemctl show cups.service | grep LoadState | cut -d = -f 2"
+      register: cubs_service_service_status
+      changed_when: false
+      check_mode: false
 
-  - name: 2.1.11 | Ensure print server services are not in use | Stop cups.service
-    service:
-      name: cups.service
-      state: stopped
-      enabled: false
-    when: cubs_service_service_status.stdout != "not-found"
-  
-  - name: 2.1.11 | Ensure print server services are not in use | Purge cups server package
-    apt:
-      name: cups
-      state: absent
-      purge: "{{ cis_purge_apt }}"
+    - name: 2.1.11 | Ensure print server services are not in use | Stop cups.service
+      service:
+        name: cups.service
+        state: stopped
+        enabled: false
+      when: cubs_service_service_status.stdout != "not-found"
+
+    - name: 2.1.11 | Ensure print server services are not in use | Purge cups server package
+      apt:
+        name: cups
+        state: absent
+        purge: "{{ cis_purge_apt }}"
   tags:
-  - level1-server
-  - level2-workstation
-  - automated
-  - patch
-  - 2.1.11
+    - level1-server
+    - level2-workstation
+    - automated
+    - patch
+    - 2.1.11
 
 - name: 2.1.12 | Ensure rpcbind services are not in use
   block:
-  - name: 2.1.12 | Ensure rpcbind services are not in use | Check rpcbind.socket
-    shell: "systemctl show rpcbind.socket | grep LoadState | cut -d = -f 2"
-    register: rpcbind_socket_status
-    changed_when: false
-    check_mode: false
+    - name: 2.1.12 | Ensure rpcbind services are not in use | Check rpcbind.socket
+      shell: "systemctl show rpcbind.socket | grep LoadState | cut -d = -f 2"
+      register: rpcbind_socket_status
+      changed_when: false
+      check_mode: false
 
-  - name: 2.1.12 | Ensure rpcbind services are not in use | Stop rpcbind.socket
-    service:
-      name: rpcbind.socket
-      state: stopped
-      enabled: false
-    when: rpcbind_socket_status.stdout != "not-found"
-  
-  - name: 2.1.12 | Ensure rpcbind services are not in use | Check rpcbind.service
-    shell: "systemctl show rpcbind.service | grep LoadState | cut -d = -f 2"
-    register: rpcbind_service_status
-    changed_when: false
-    check_mode: false
+    - name: 2.1.12 | Ensure rpcbind services are not in use | Stop rpcbind.socket
+      service:
+        name: rpcbind.socket
+        state: stopped
+        enabled: false
+      when: rpcbind_socket_status.stdout != "not-found"
 
-  - name: 2.1.12 | Ensure rpcbind services are not in use | Stop rpcbind.service
-    service:
-      name: rpcbind.service
-      state: stopped
-      enabled: false
-    when: rpcbind_service_status.stdout != "not-found"
-  
-  - name: 2.1.12 | Ensure rpcbind services are not in use | Purge rpcbind server package
-    apt:
-      name: rpcbind
-      state: absent
-      purge: "{{ cis_purge_apt }}"
+    - name: 2.1.12 | Ensure rpcbind services are not in use | Check rpcbind.service
+      shell: "systemctl show rpcbind.service | grep LoadState | cut -d = -f 2"
+      register: rpcbind_service_status
+      changed_when: false
+      check_mode: false
+
+    - name: 2.1.12 | Ensure rpcbind services are not in use | Stop rpcbind.service
+      service:
+        name: rpcbind.service
+        state: stopped
+        enabled: false
+      when: rpcbind_service_status.stdout != "not-found"
+
+    - name: 2.1.12 | Ensure rpcbind services are not in use | Purge rpcbind server package
+      apt:
+        name: rpcbind
+        state: absent
+        purge: "{{ cis_purge_apt }}"
   tags:
-  - not cis_rpc_required
-  - level1-server
-  - level2-workstation
-  - automated
-  - patch
-  - 2.1.12
+    - not cis_rpc_required
+    - level1-server
+    - level2-workstation
+    - automated
+    - patch
+    - 2.1.12
 
 - name: 2.1.13 | Ensure rsync services are not in use
   block:
-  - name: 2.1.13 | Ensure rsync services are not in use | Check rsync.service
-    shell: "systemctl show rsync.service | grep LoadState | cut -d = -f 2"
-    register: rsync_service_status
-    changed_when: false
-    check_mode: false
+    - name: 2.1.13 | Ensure rsync services are not in use | Check rsync.service
+      shell: "systemctl show rsync.service | grep LoadState | cut -d = -f 2"
+      register: rsync_service_status
+      changed_when: false
+      check_mode: false
 
-  - name: 2.1.13 | Ensure rsync services are not in use | Stop rsync.service
-    service:
-      name: rsync.service
-      state: stopped
-      enabled: false
-    when: rsync_service_status.stdout != "not-found"
+    - name: 2.1.13 | Ensure rsync services are not in use | Stop rsync.service
+      service:
+        name: rsync.service
+        state: stopped
+        enabled: false
+      when: rsync_service_status.stdout != "not-found"
 
-  - name: 2.1.13 | Ensure rsync services are not in use | Purge rsync server package
-    apt:
-      name: rsync
-      state: absent
-      purge: "{{ cis_purge_apt }}"
+    - name: 2.1.13 | Ensure rsync services are not in use | Purge rsync server package
+      apt:
+        name: rsync
+        state: absent
+        purge: "{{ cis_purge_apt }}"
   when:
-  - not cis_rsync_server
+    - not cis_rsync_server
   tags:
-  - level1-server
-  - level2-workstation
-  - automated
-  - patch
-  - 2.1.13
+    - level1-server
+    - level2-workstation
+    - automated
+    - patch
+    - 2.1.13
 
 - name: 2.1.14 | Ensure samba file server services are not in use
   block:
-  - name: 2.1.14 | Ensure samba file server services are not in use | Check smbd.service
-    shell: "systemctl show smbd.service | grep LoadState | cut -d = -f 2"
-    register: smbd_service_status
-    changed_when: false
-    check_mode: false
+    - name: 2.1.14 | Ensure samba file server services are not in use | Check smbd.service
+      shell: "systemctl show smbd.service | grep LoadState | cut -d = -f 2"
+      register: smbd_service_status
+      changed_when: false
+      check_mode: false
 
-  - name: 2.1.14 | Ensure samba file server services are not in use | Stop smbd.service
-    service:
-      name: smbd.service
-      state: stopped
-      enabled: false
-    when: smbd_service_status.stdout != "not-found"
+    - name: 2.1.14 | Ensure samba file server services are not in use | Stop smbd.service
+      service:
+        name: smbd.service
+        state: stopped
+        enabled: false
+      when: smbd_service_status.stdout != "not-found"
 
-  - name: 2.1.14 | Ensure samba file server services are not in use | Purge samba server package
-    apt:
-      name: samba
-      state: absent
-      purge: "{{ cis_purge_apt }}"
+    - name: 2.1.14 | Ensure samba file server services are not in use | Purge samba server package
+      apt:
+        name: samba
+        state: absent
+        purge: "{{ cis_purge_apt }}"
   tags:
-  - level1-server
-  - level2-workstation
-  - automated
-  - patch
-  - 2.1.14
+    - level1-server
+    - level2-workstation
+    - automated
+    - patch
+    - 2.1.14
 
 - name: 2.1.15 | Ensure snmp services are not in use
   block:
-  - name: 2.1.15 | Ensure snmp services are not in use | Check snmpd.service
-    shell: "systemctl show snmpd.service | grep LoadState | cut -d = -f 2"
-    register: snmpd_service_status
-    changed_when: false
-    check_mode: false
+    - name: 2.1.15 | Ensure snmp services are not in use | Check snmpd.service
+      shell: "systemctl show snmpd.service | grep LoadState | cut -d = -f 2"
+      register: snmpd_service_status
+      changed_when: false
+      check_mode: false
 
-  - name: 2.1.15 | Ensure snmp services are not in use | Stop snmpd.service
-    service:
-      name: snmpd.service
-      state: stopped
-      enabled: false
-    when: snmpd_service_status.stdout != "not-found"
+    - name: 2.1.15 | Ensure snmp services are not in use | Stop snmpd.service
+      service:
+        name: snmpd.service
+        state: stopped
+        enabled: false
+      when: snmpd_service_status.stdout != "not-found"
 
-  - name: 2.1.15 | Ensure snmp services are not in use | Purge snmpd server package
-    apt:
-      name: snmpd
-      state: absent
-      purge: "{{ cis_purge_apt }}"
+    - name: 2.1.15 | Ensure snmp services are not in use | Purge snmpd server package
+      apt:
+        name: snmpd
+        state: absent
+        purge: "{{ cis_purge_apt }}"
   tags:
-  - level1-server
-  - level2-workstation
-  - automated
-  - patch
-  - 2.1.15
+    - level1-server
+    - level2-workstation
+    - automated
+    - patch
+    - 2.1.15
 
 - name: 2.1.16 | Ensure tftp server services are not in use
   block:
-  - name: 2.1.16 | Ensure tftp server services are not in use | Check tftpd-hpa.service
-    shell: "systemctl show tftpd-hpa.service | grep LoadState | cut -d = -f 2"
-    register: tftpd_hpa_service_status
-    changed_when: false
-    check_mode: false
+    - name: 2.1.16 | Ensure tftp server services are not in use | Check tftpd-hpa.service
+      shell: "systemctl show tftpd-hpa.service | grep LoadState | cut -d = -f 2"
+      register: tftpd_hpa_service_status
+      changed_when: false
+      check_mode: false
 
-  - name: 2.1.16 | Ensure tftp server services are not in use | Stop tftpd-hpa.service
-    service:
-      name: tftpd-hpa.service
-      state: stopped
-      enabled: false
-    when: tftpd_hpa_service_status.stdout != "not-found"
+    - name: 2.1.16 | Ensure tftp server services are not in use | Stop tftpd-hpa.service
+      service:
+        name: tftpd-hpa.service
+        state: stopped
+        enabled: false
+      when: tftpd_hpa_service_status.stdout != "not-found"
 
-  - name: 2.1.16 | Ensure tftp server services are not in use | Purge tftpd-hpa server package
-    apt:
-      name: tftpd-hpa
-      state: absent
-      purge: "{{ cis_purge_apt }}"
+    - name: 2.1.16 | Ensure tftp server services are not in use | Purge tftpd-hpa server package
+      apt:
+        name: tftpd-hpa
+        state: absent
+        purge: "{{ cis_purge_apt }}"
   tags:
-  - level1-server
-  - level2-workstation
-  - automated
-  - patch
-  - 2.1.16
+    - level1-server
+    - level2-workstation
+    - automated
+    - patch
+    - 2.1.16
 
 - name: 2.1.17 | Ensure web proxy server services are not in use
   block:
-  - name: 2.1.17 | Ensure web proxy server services are not in use | Check squid.service
-    shell: "systemctl show squid.service | grep LoadState | cut -d = -f 2"
-    register: squid_service_status
-    changed_when: false
-    check_mode: false
+    - name: 2.1.17 | Ensure web proxy server services are not in use | Check squid.service
+      shell: "systemctl show squid.service | grep LoadState | cut -d = -f 2"
+      register: squid_service_status
+      changed_when: false
+      check_mode: false
 
-  - name: 2.1.17 | Ensure web proxy server services are not in use | Stop squid.service
-    service:
-      name: squid.service
-      state: stopped
-      enabled: false
-    when: squid_service_status.stdout != "not-found"
+    - name: 2.1.17 | Ensure web proxy server services are not in use | Stop squid.service
+      service:
+        name: squid.service
+        state: stopped
+        enabled: false
+      when: squid_service_status.stdout != "not-found"
 
-  - name: 2.1.17 | Ensure web proxy server services are not in use | Purge squid server package
-    apt:
-      name: squid
-      state: absent
-      purge: "{{ cis_purge_apt }}"
+    - name: 2.1.17 | Ensure web proxy server services are not in use | Purge squid server package
+      apt:
+        name: squid
+        state: absent
+        purge: "{{ cis_purge_apt }}"
   tags:
-  - level1-server
-  - level2-workstation
-  - automated
-  - patch
-  - 2.1.17
+    - level1-server
+    - level2-workstation
+    - automated
+    - patch
+    - 2.1.17
 
 - name: 2.1.18 | Ensure web server services are not in use
   block:
-  - name: 2.1.18 | Ensure web server services are not in use | Check apache2.service
-    shell: "systemctl show apache2.service | grep LoadState | cut -d = -f 2"
-    register: apache2_service_status
-    changed_when: false
-    check_mode: false
+    - name: 2.1.18 | Ensure web server services are not in use | Check apache2.service
+      shell: "systemctl show apache2.service | grep LoadState | cut -d = -f 2"
+      register: apache2_service_status
+      changed_when: false
+      check_mode: false
 
-  - name: 2.1.18 | Ensure web server services are not in use | Stop apache2.socket
-    service:
-      name: apache2.socket
-      state: stopped
-      enabled: false
-    when: apache2_service_status.stdout != "not-found"
-  
-  - name: 2.1.18 | Ensure web server services are not in use | Check httpd.service
-    shell: "systemctl show httpd.service | grep LoadState | cut -d = -f 2"
-    register: httpd_service_status
-    changed_when: false
-    check_mode: false
-  
-  - name: 2.1.18 | Ensure web server services are not in use | Stop httpd.service
-    service:
-      name: httpd.service
-      state: stopped
-      enabled: false
-    when: httpd_service_status.stdout != "not-found"
-  
-  - name: 2.1.18 | Ensure web server services are not in use | Check nginx.service
-    shell: "systemctl show nginx.service | grep LoadState | cut -d = -f 2"
-    register: nginx_service_status
-    changed_when: false
-    check_mode: false
-  
-  - name: 2.1.18 | Ensure web server services are not in use | Stop nginx.service
-    service:
-      name: nginx.service
-      state: stopped
-      enabled: false
-    when: nginx_service_status.stdout != "not-found"
+    - name: 2.1.18 | Ensure web server services are not in use | Stop apache2.socket
+      service:
+        name: apache2.socket
+        state: stopped
+        enabled: false
+      when: apache2_service_status.stdout != "not-found"
 
-  - name: 2.1.18 | Ensure web server services are not in use | Purge apache2 server package
-    apt:
-      name: apache2
-      state: absent
-      purge: "{{ cis_purge_apt }}"
-  
-  - name: 2.1.18 | Ensure web server services are not in use | Purge nginx server package
-    apt:
-      name: nginx
-      state: absent
-      purge: "{{ cis_purge_apt }}"
+    - name: 2.1.18 | Ensure web server services are not in use | Check httpd.service
+      shell: "systemctl show httpd.service | grep LoadState | cut -d = -f 2"
+      register: httpd_service_status
+      changed_when: false
+      check_mode: false
+
+    - name: 2.1.18 | Ensure web server services are not in use | Stop httpd.service
+      service:
+        name: httpd.service
+        state: stopped
+        enabled: false
+      when: httpd_service_status.stdout != "not-found"
+
+    - name: 2.1.18 | Ensure web server services are not in use | Check nginx.service
+      shell: "systemctl show nginx.service | grep LoadState | cut -d = -f 2"
+      register: nginx_service_status
+      changed_when: false
+      check_mode: false
+
+    - name: 2.1.18 | Ensure web server services are not in use | Stop nginx.service
+      service:
+        name: nginx.service
+        state: stopped
+        enabled: false
+      when: nginx_service_status.stdout != "not-found"
+
+    - name: 2.1.18 | Ensure web server services are not in use | Purge apache2 server package
+      apt:
+        name: apache2
+        state: absent
+        purge: "{{ cis_purge_apt }}"
+
+    - name: 2.1.18 | Ensure web server services are not in use | Purge nginx server package
+      apt:
+        name: nginx
+        state: absent
+        purge: "{{ cis_purge_apt }}"
   tags:
-  - level1-server
-  - level2-workstation
-  - automated
-  - patch
-  - 2.1.18
+    - level1-server
+    - level2-workstation
+    - automated
+    - patch
+    - 2.1.18
 
 - name: 2.1.19 | Ensure xinetd services are not in use
   block:
-  - name: 2.1.19 | Ensure xinetd services are not in use | Check xinetd.service
-    shell: "systemctl show xinetd.service | grep LoadState | cut -d = -f 2"
-    register: xinetd_service_status
-    changed_when: false
-    check_mode: false
+    - name: 2.1.19 | Ensure xinetd services are not in use | Check xinetd.service
+      shell: "systemctl show xinetd.service | grep LoadState | cut -d = -f 2"
+      register: xinetd_service_status
+      changed_when: false
+      check_mode: false
 
-  - name: 2.1.19 | Ensure xinetd services are not in use | Stop xinetd.service
-    service:
-      name: xinetd.service
-      state: stopped
-      enabled: false
-    when: xinetd_service_status.stdout != "not-found"
+    - name: 2.1.19 | Ensure xinetd services are not in use | Stop xinetd.service
+      service:
+        name: xinetd.service
+        state: stopped
+        enabled: false
+      when: xinetd_service_status.stdout != "not-found"
 
-  - name: 2.1.19 | Ensure xinetd services are not in use | Purge xinetd server package
-    apt:
-      name: xinetd
-      state: absent
-      purge: "{{ cis_purge_apt }}"
+    - name: 2.1.19 | Ensure xinetd services are not in use | Purge xinetd server package
+      apt:
+        name: xinetd
+        state: absent
+        purge: "{{ cis_purge_apt }}"
   tags:
-  - level1-server
-  - level2-workstation
-  - automated
-  - patch
-  - 2.1.19
+    - level1-server
+    - level2-workstation
+    - automated
+    - patch
+    - 2.1.19
 
 - name: 2.1.20 | Ensure X window server services are not in use
   apt:
@@ -620,63 +620,63 @@
     state: absent
     purge: "{{ cis_purge_apt }}"
   tags:
-  - level1-server
-  - level2-workstation
-  - automated
-  - patch
-  - 2.1.20
+    - level1-server
+    - level2-workstation
+    - automated
+    - patch
+    - 2.1.20
 
 - name: 2.1.21 | Ensure mail transfer agent is configured for local-only mode
   block:
-  - name: 2.1.21 | Ensure mail transfer agent is configured for local-only mode | Check postfix.service
-    shell: "systemctl show postfix.service | grep LoadState | cut -d = -f 2"
-    register: postfix_service_status
-    changed_when: false
-    check_mode: false
+    - name: 2.1.21 | Ensure mail transfer agent is configured for local-only mode | Check postfix.service
+      shell: "systemctl show postfix.service | grep LoadState | cut -d = -f 2"
+      register: postfix_service_status
+      changed_when: false
+      check_mode: false
 
-  - name: 2.1.21 | Ensure mail transfer agent is configured for local-only mode | Ensure inet_interfaces is set to loopback-only in main.cf
-    lineinfile:
-      path: /etc/postfix/main.cf
-      regexp: '^inet_interfaces'
-      line: 'inet_interfaces = loopback-only'
-      state: present
-      insertafter: '^#.*RECEIVING MAIL'
-    when: postfix_service_status.stdout != "not-found"
+    - name: 2.1.21 | Ensure mail transfer agent is configured for local-only mode | Ensure inet_interfaces is set to loopback-only in main.cf
+      lineinfile:
+        path: /etc/postfix/main.cf
+        regexp: "^inet_interfaces"
+        line: "inet_interfaces = loopback-only"
+        state: present
+        insertafter: "^#.*RECEIVING MAIL"
+      when: postfix_service_status.stdout != "not-found"
 
-  - name: 2.1.21 | Ensure mail transfer agent is configured for local-only mode | Restart postfix service
-    systemd:
-      name: postfix
-      state: restarted
-    when: postfix_service_status.stdout != "not-found"
+    - name: 2.1.21 | Ensure mail transfer agent is configured for local-only mode | Restart postfix service
+      systemd:
+        name: postfix
+        state: restarted
+      when: postfix_service_status.stdout != "not-found"
   tags:
-  - level1-server
-  - level2-workstation
-  - automated
-  - patch
-  - 2.1.21
-  - postfix
+    - level1-server
+    - level2-workstation
+    - automated
+    - patch
+    - 2.1.21
+    - postfix
 
 - name: 2.1.22 | Ensure only approved services are listening on a network interface
   block:
-  - name: 2.1.22 | Ensure only approved services are listening on a network interface | List services
-    shell: ss -plntu
-    register: cis_2_1_22_services
+    - name: 2.1.22 | Ensure only approved services are listening on a network interface | List services
+      shell: ss -plntu
+      register: cis_2_1_22_services
 
-  - name: 2.1.22 | Ensure only approved services are listening on a network interface | Generate warning
-    debug:
-      msg:
-      - "Warning!! Below are services running of the server"
-      - "Please review to make sure they are approved by local site policy"
-      - "{{ cis_2_1_22_services.stdout_lines }}"
+    - name: 2.1.22 | Ensure only approved services are listening on a network interface | Generate warning
+      debug:
+        msg:
+          - "Warning!! Below are services running of the server"
+          - "Please review to make sure they are approved by local site policy"
+          - "{{ cis_2_1_22_services.stdout_lines }}"
 
-  - name: 2.1.22 | Ensure only approved services are listening on a network interface | warn_count
-    import_tasks:
-      file: warning_facts.yml
+    - name: 2.1.22 | Ensure only approved services are listening on a network interface | warn_count
+      import_tasks:
+        file: warning_facts.yml
   vars:
-    warn_control_id: '2.1.22'
+    warn_control_id: "2.1.22"
   tags:
-  - level1-server
-  - level1-workstation
-  - manual
-  - audit
-  - 2.1.22
+    - level1-server
+    - level1-workstation
+    - manual
+    - audit
+    - 2.1.22

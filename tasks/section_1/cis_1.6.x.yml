@@ -1,108 +1,116 @@
 ---
-
 - name: "1.6.1 | Ensure message of the day is configured properly"
   block:
-  - name: "1.6.1 | Ensure message of the day is configured properly | motd"
-    template:
-      src: etc/motd.j2
-      dest: /etc/motd
+    - name: "1.6.1 | Ensure message of the day is configured properly | motd"
+      template:
+        src: etc/motd.j2
+        dest: /etc/motd
 
-  - name: "1.6.1 | Ensure message of the day is configured properly | disable dynamic_motd"
-    lineinfile:
-      path: /etc/pam.d/sshd
-      regexp: "{{ item.regexp }}"
-      line: "{{ item.line }}"
-      backrefs: true
-    loop:
-    - { regexp: '(session\s+optional\s+pam_motd.so\s+motd=/run/motd.dynamic)', line: '# \1' }
-    - { regexp: '(session\s+optional\s+pam_motd.so noupdate)', line: '# \1' }
-    - { regexp: '# Pam_motd.so disabled for CIS benchmark', line: '# Pam_motd.so disabled for CIS benchmark' }
-    when: cis_disable_dynamic_motd
+    - name: "1.6.1 | Ensure message of the day is configured properly | disable dynamic_motd"
+      lineinfile:
+        path: /etc/pam.d/sshd
+        regexp: "{{ item.regexp }}"
+        line: "{{ item.line }}"
+        backrefs: true
+      loop:
+        - {
+            regexp: '(session\s+optional\s+pam_motd.so\s+motd=/run/motd.dynamic)',
+            line: '# \1',
+          }
+        - {
+            regexp: '(session\s+optional\s+pam_motd.so noupdate)',
+            line: '# \1',
+          }
+        - {
+            regexp: "# Pam_motd.so disabled for CIS benchmark",
+            line: "# Pam_motd.so disabled for CIS benchmark",
+          }
+      when: cis_disable_dynamic_motd
   tags:
-  - level1-server
-  - level1-workstation
-  - automated
-  - patch
-  - 1.6.1
-  - motd
+    - level1-server
+    - level1-workstation
+    - automated
+    - patch
+    - 1.6.1
+    - motd
 
 - name: "1.6.2 | Ensure local login warning banner is configured properly"
   block:
-  - name: "1.6.2 | Ensure local login warning banner is configured properly | issue"
-    template:
-      src: etc/issue.j2
-      dest: /etc/issue
+    - name: "1.6.2 | Ensure local login warning banner is configured properly | issue"
+      template:
+        src: etc/issue.j2
+        dest: /etc/issue
 
-  - name: "1.6.2 | Ensure local login warning banner is kept on package upgrade | issue"
-    community.general.dpkg_divert:
-      path: /etc/issue
+    - name: "1.6.2 | Ensure local login warning banner is kept on package upgrade | issue"
+      community.general.dpkg_divert:
+        path: /etc/issue
   tags:
-  - level1-server
-  - level1-workstation
-  - automated
-  - patch
-  - 1.6.2
-  - banner
+    - level1-server
+    - level1-workstation
+    - automated
+    - patch
+    - 1.6.2
+    - banner
 
 - name: "1.6.3 | Ensure remote login warning banner is configured properly"
   block:
-  - name: "1.6.3 | Ensure remote login warning banner is configured properly | issue.net"
-    template:
-      src: etc/issue.net.j2
-      dest: /etc/issue.net
+    - name: "1.6.3 | Ensure remote login warning banner is configured properly | issue.net"
+      template:
+        src: etc/issue.net.j2
+        dest: /etc/issue.net
 
-  - name: "1.6.3 | Ensure remote login warning banner is kept on package upgrade | issue.net"
-    community.general.dpkg_divert:
-      path: /etc/issue.net
+    - name: "1.6.3 | Ensure remote login warning banner is kept on package upgrade | issue.net"
+      community.general.dpkg_divert:
+        path: /etc/issue.net
   tags:
-  - level1-server
-  - level1-workstation
-  - automated
-  - patch
-  - 1.6.3
-  - banner
+    - level1-server
+    - level1-workstation
+    - automated
+    - patch
+    - 1.6.3
+    - banner
 
 - name: "1.6.4 | Ensure permissions on /etc/motd are configured"
   file:
     path: /etc/motd
     owner: root
     group: root
-    mode: '0644'
+    mode: "0644"
   tags:
-  - level1-server
-  - level1-workstation
-  - automated
-  - patch
-  - 1.6.4
-  - permissions
-  - motd
+    - level1-server
+    - level1-workstation
+    - automated
+    - patch
+    - 1.6.4
+    - permissions
+    - motd
 
 - name: "1.6.5 | Ensure permissions on /etc/issue are configured"
   file:
     path: /etc/issue
     owner: root
     group: root
-    mode: '0644'
+    mode: "0644"
   tags:
-  - level1-server
-  - level1-workstation
-  - automated
-  - patch
-  - 1.6.5
-  - permissions
-  - banner
+    - level1-server
+    - level1-workstation
+    - automated
+    - patch
+    - 1.6.5
+    - permissions
+    - banner
 
 - name: "1.6.6 | Ensure permissions on /etc/issue.net are configured"
   file:
     path: /etc/issue.net
     owner: root
     group: root
-    mode: '0644'
+    mode: "0644"
   tags:
-  - level1-server
-  - level1-workstation
-  - automated
-  - patch
-  - 1.6.6
-  - permissions
-  - banner
+    - level1-server
+    - level1-workstation
+    - automated
+    - patch
+    - 1.6.6
+    - permissions
+    - banner

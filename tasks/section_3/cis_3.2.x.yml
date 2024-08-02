@@ -1,119 +1,116 @@
 ---
-
 - name: "3.2.1 | Ensure dccp kernel module is not available"
   block:
-  - name: "3.2.1 | Ensure dccp kernel module is not available | Edit modprobe config"
-    lineinfile:
-      dest: /etc/modprobe.d/dccp.conf
-      regexp: '^(#)?install dccp(\\s|$)'
-      line: install dccp /bin/true
-      create: true
+    - name: "3.2.1 | Ensure dccp kernel module is not available | Edit modprobe config"
+      lineinfile:
+        dest: /etc/modprobe.d/dccp.conf
+        regexp: '^(#)?install dccp(\\s|$)'
+        line: install dccp /bin/true
+        create: true
 
-  - name: "3.2.1 | Ensure dccp kernel module is not available | blacklist"
-    lineinfile:
-      path: /etc/modprobe.d/blacklist.conf
-      regexp: "^(#)?blacklist dccp(\\s|$)"
-      line: "blacklist dccp"
-      create: true
-      mode: '0600'
+    - name: "3.2.1 | Ensure dccp kernel module is not available | blacklist"
+      lineinfile:
+        path: /etc/modprobe.d/blacklist.conf
+        regexp: "^(#)?blacklist dccp(\\s|$)"
+        line: "blacklist dccp"
+        create: true
+        mode: "0600"
 
-  - name: "3.2.1 | Ensure dccp kernel module is not available | Disable dccp"
-    community.general.modprobe:
-      name: dccp
-      state: absent
+    - name: "3.2.1 | Ensure dccp kernel module is not available | Disable dccp"
+      community.general.modprobe:
+        name: dccp
+        state: absent
   tags:
-  - level2-server
-  - level2-workstation
-  - automated
-  - patch
-  - 3.2.1
-  - dccp
+    - level2-server
+    - level2-workstation
+    - automated
+    - patch
+    - 3.2.1
+    - dccp
 
 - name: "3.2.2 | Ensure tipc kernel module is not available"
   block:
-  - name: "3.2.2 | Ensure tipc kernel module is not available | Edit modprobe config"
-    lineinfile:
-      dest: /etc/modprobe.d/tipc.conf
-      regexp: '^(#)?install tipc(\\s|$)'
-      line: install tipc /bin/true
-      create: true
+    - name: "3.2.2 | Ensure tipc kernel module is not available | Edit modprobe config"
+      lineinfile:
+        dest: /etc/modprobe.d/tipc.conf
+        regexp: '^(#)?install tipc(\\s|$)'
+        line: install tipc /bin/true
+        create: true
 
-  - name: "3.2.2 | Ensure tipc kernel module is not available | blacklist"
-    lineinfile:
-      path: /etc/modprobe.d/blacklist.conf
-      regexp: "^(#)?blacklist tipc(\\s|$)"
-      line: "blacklist tipc"
-      create: true
-      mode: '0600'
+    - name: "3.2.2 | Ensure tipc kernel module is not available | blacklist"
+      lineinfile:
+        path: /etc/modprobe.d/blacklist.conf
+        regexp: "^(#)?blacklist tipc(\\s|$)"
+        line: "blacklist tipc"
+        create: true
+        mode: "0600"
 
-  - name: "3.2.2 | Ensure tipc kernel module is not available | Disable tipc"
-    community.general.modprobe:
-      name: tipc
-      state: absent
+    - name: "3.2.2 | Ensure tipc kernel module is not available | Disable tipc"
+      community.general.modprobe:
+        name: tipc
+        state: absent
   tags:
-  - level2-server
-  - level2-workstation
-  - automated
-  - patch
-  - 3.2.2
-  - tipc
+    - level2-server
+    - level2-workstation
+    - automated
+    - patch
+    - 3.2.2
+    - tipc
 
 - name: "3.2.3 | Ensure rds kernel module is not available"
   block:
-  - name: "3.2.3 | Ensure rds kernel module is not available | Edit modprobe config"
-    lineinfile:
-      dest: /etc/modprobe.d/rds.conf
-      regexp: '^(#)?install rds(\\s|$)'
-      line: install rds /bin/true
-      create: true
+    - name: "3.2.3 | Ensure rds kernel module is not available | Edit modprobe config"
+      lineinfile:
+        dest: /etc/modprobe.d/rds.conf
+        regexp: '^(#)?install rds(\\s|$)'
+        line: install rds /bin/true
+        create: true
 
-  - name: "3.2.3 | Ensure rds kernel module is not available | blacklist"
-    lineinfile:
-      path: /etc/modprobe.d/blacklist.conf
-      regexp: "^(#)?blacklist rds(\\s|$)"
-      line: "blacklist rds"
-      create: true
-      mode: '0600'
+    - name: "3.2.3 | Ensure rds kernel module is not available | blacklist"
+      lineinfile:
+        path: /etc/modprobe.d/blacklist.conf
+        regexp: "^(#)?blacklist rds(\\s|$)"
+        line: "blacklist rds"
+        create: true
+        mode: "0600"
 
-  - name: "3.2.3 | Ensure rds kernel module is not available | Disable rds"
-    community.general.modprobe:
-      name: rds
-      state: absent
+    - name: "3.2.3 | Ensure rds kernel module is not available | Disable rds"
+      community.general.modprobe:
+        name: rds
+        state: absent
   tags:
-  - level2-server
-  - level2-workstation
-  - automated
-  - patch
-  - 3.2.3
-  - rds
+    - level2-server
+    - level2-workstation
+    - automated
+    - patch
+    - 3.2.3
+    - rds
 
 - name: "3.2.4 | Ensure sctp kernel module is not available"
   block:
-  - name: "3.2.4 | Ensure sctp kernel module is not available | Edit modprobe config"
-    lineinfile:
-      dest: /etc/modprobe.d/sctp.conf
-      regexp: '^(#)?install sctp(\\s|$)'
-      line: install sctp /bin/true
-      create: true
+    - name: "3.2.4 | Ensure sctp kernel module is not available | Edit modprobe config"
+      lineinfile:
+        dest: /etc/modprobe.d/sctp.conf
+        regexp: '^(#)?install sctp(\\s|$)'
+        line: install sctp /bin/true
+        create: true
 
-  - name: "3.2.4 | Ensure sctp kernel module is not available | blacklist"
-    lineinfile:
-      path: /etc/modprobe.d/blacklist.conf
-      regexp: "^(#)?blacklist sctp(\\s|$)"
-      line: "blacklist sctp"
-      create: true
-      mode: '0600'
+    - name: "3.2.4 | Ensure sctp kernel module is not available | blacklist"
+      lineinfile:
+        path: /etc/modprobe.d/blacklist.conf
+        regexp: "^(#)?blacklist sctp(\\s|$)"
+        line: "blacklist sctp"
+        create: true
+        mode: "0600"
 
-  - name: "3.2.4 | Ensure sctp kernel module is not available | Disable sctp"
-    community.general.modprobe:
-      name: sctp
-      state: absent
+    - name: "3.2.4 | Ensure sctp kernel module is not available | Disable sctp"
+      community.general.modprobe:
+        name: sctp
+        state: absent
   tags:
-  - level2-server
-  - level2-workstation
-  - automated
-  - patch
-  - 3.2.4
-  - sctp
-
-
+    - level2-server
+    - level2-workstation
+    - automated
+    - patch
+    - 3.2.4
+    - sctp

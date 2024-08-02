@@ -1,13 +1,18 @@
 ---
-
 - name: "SECTION | 6.1 | Configure Filesystem Integrity Checking"
   import_tasks:
     file: cis_6.1.x.yml
+  tags:
+    - section6.1
 
 - name: "SECTION | 6.2 | System Logging"
   import_tasks:
     file: cis_6.2.x.yml
+  tags:
+    - section6.2
 
 - name: "SECTION | 6.3 | System Auditing"
   import_tasks:
     file: cis_6.3.x.yml
+  tags:
+    - section6.3
