@@ -23,7 +23,7 @@
         state: present
       when: (aide_checksums is defined) and (aide_checksums| length > 0)
 
-    - name: Configure default AIDE excludes file
+    - name: 6.1.1 | Ensure AIDE is installed | Configure default AIDE excludes file
       copy:
         src: "files/6_1_1_local_excludes.txt"
         dest: "/etc/aide/aide.conf.d/00_local_excludes"
@@ -47,8 +47,12 @@
       register: aide_update_result
       failed_when: "aide_update_result.rc != 0 and 'AIDE found differences between database and filesystem' not in aide_update_result.stdout"
 
-    - name: "6.1.1 | Ensure AIDE is installed | Configure AIDE"
-      shell: aideinit && mv /var/lib/aide/aide.db.new /var/lib/aide/aide.db
+    - name: "6.1.1 | Ensure AIDE is installed | Create new database"
+      command: aideinit -y -f
+      when: not aide_db_status.stat.exists
+
+    - name: "6.1.1 | Ensure AIDE is installed | Configure new database"
+      command: mv -f /var/lib/aide/aide.db.new /var/lib/aide/aide.db
       when: not aide_db_status.stat.exists
   when:
     - cis_config_aide
