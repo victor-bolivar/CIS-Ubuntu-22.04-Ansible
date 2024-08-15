@@ -235,31 +235,59 @@
 
 - name: "5.4.2.5 | Ensure root path integrity"
   block:
-    - name: "5.4.2.5 | Ensure root path integrity | Execute validation script"
-      script: files/5_4_2_5.sh
+    - name: "5.4.2.5 | Ensure root path integrity | Get root's PATH"
+      shell: env | grep '^PATH' | cut -d= -f2
       changed_when: false
       register: output
 
-    - name: "5.4.2.5 | Ensure root path integrity | Warn if didn't pass the audit results"
-      debug:
-        msg:
-          - "WARNING!! Root's path is NOT correctly configured. Correct or justify any:"
-          - "- Locations that are not directories"
-          - "- Empty directories (::)"
-          - "- Trailing (:)"
-          - "- Current working directory (.)"
-          - "- Non root owned directories"
-          - "- Directories that less restrictive than mode 0755"
-          - "Encountered errors: "
-          - "{{ output.stdout_lines }}"
-      when: '"Root''s path is correctly configured" not in output.stdout'
+    - name: "5.4.2.5 | Ensure root path integrity | Set fact to variable root_path"
+      set_fact:
+        root_path: "{{ output.stdout }}"
 
-    - name: "5.4.2.5 | Ensure root path integrity | warn_count"
-      import_tasks:
-        file: warning_facts.yml
-      when: '"Root''s path is correctly configured" not in output.stdout'
-  vars:
-    warn_control_id: "5.4.2.5"
+    - name: "5.4.2.5 | Ensure root path integrity | Fail if contains a trailing colon"
+      fail:
+        msg: "The root PATH contains a trailing colon (:)"
+      when: root_path.endswith(':')
+
+    - name: "5.4.2.5 | Ensure root path integrity | Fail if contains an empty directory"
+      fail:
+        msg: "The variable 'root_path' contains an empty directory (::)."
+      when: '"::" in root_path'
+
+    - name: "5.4.2.5 | Ensure root path integrity | Fail if contains a current working directory"
+      fail:
+        msg: "The variable 'root_path' contains a current working directory (.)."
+      when: '":.:" in root_path or root_path.startswith(".:") or root_path.endswith(":.")'
+
+    - name: "5.4.2.5 | Ensure root path integrity | Analyze each element"
+      block:
+        - name: "5.4.2.5 | Ensure root path integrity | Analyze each element | Split root_path into parts"
+          set_fact:
+            root_path_parts: "{{ root_path.split(':') }}"
+
+        - name: "5.4.2.5 | Ensure root path integrity | Analyze each element | Check ownership of each element"
+          stat:
+            path: "{{ item }}"
+          with_items: "{{ root_path_parts }}"
+          register: path_check
+
+        - name: "5.4.2.5 | Ensure root path integrity | Analyze each element | Fail if any element is not owned by root"
+          fail:
+            msg: "The directory '{{ item.item }}' is not owned by root."
+          when: item.stat.pw_name != 'root'
+          with_items: "{{ path_check.results }}"
+
+        - name: "5.4.2.5 | Ensure root path integrity | Analyze each element | Fail if any part is not a directory"
+          fail:
+            msg: "The path '{{ item.item }}' is not a directory."
+          when: not item.stat.isdir
+          with_items: "{{ path_check.results }}"
+
+        - name: "5.4.2.5 | Ensure root path integrity | Analyze each element | Fail if any part has permissions less restrictive than 0755"
+          fail:
+            msg: "The directory '{{ item.item }}' has permissions less restrictive than 0755."
+          when: (item.stat.mode | int(base=8)) > 755
+          with_items: "{{ path_check.results }}"
   tags:
     - level1-server
     - level1-workstation
