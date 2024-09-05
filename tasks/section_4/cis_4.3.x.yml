@@ -17,7 +17,7 @@
   package:
     name: nftables
     state: absent
-    purge: "{{ cis_purge_apt }}"
+    purge: "{{ cis_purge_apt_nftables }}"
   when:
     - cis_firewall_package == "iptables"
   tags:
@@ -32,7 +32,7 @@
   package:
     name: ufw
     state: absent
-    purge: "{{ cis_purge_apt }}"
+    purge: "{{ cis_purge_apt_ufw }}"
   when:
     - cis_firewall_package == "iptables"
   tags:
