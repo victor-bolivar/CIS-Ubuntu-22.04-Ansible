@@ -3,7 +3,7 @@
   package:
     name: nis
     state: absent
-    purge: "{{ cis_purge_apt }}"
+    purge: "{{ cis_purge_apt_nis }}"
   when:
     - not cis_nis_required
   tags:
@@ -16,7 +16,7 @@
   package:
     name: rsh-client
     state: absent
-    purge: "{{ cis_purge_apt }}"
+    purge: "{{ cis_purge_apt_rsh }}"
   when:
     - not cis_rsh_required
   tags:
@@ -31,7 +31,7 @@
   package:
     name: talk
     state: absent
-    purge: "{{ cis_purge_apt }}"
+    purge: "{{ cis_purge_apt_talk }}"
   when:
     - not cis_talk_required
   tags:
@@ -46,7 +46,7 @@
   package:
     name: telnet
     state: absent
-    purge: "{{ cis_purge_apt }}"
+    purge: "{{ cis_purge_apt_telnet }}"
   when:
     - not cis_telnet_required
   tags:
@@ -61,7 +61,7 @@
   package:
     name: ldap-utils
     state: absent
-    purge: "{{ cis_purge_apt }}"
+    purge: "{{ cis_purge_apt_ldap }}"
   when:
     - not cis_ldap_clients_required
   tags:
@@ -76,7 +76,7 @@
   package:
     name: ftp
     state: absent
-    purge: "{{ cis_purge_apt }}"
+    purge: "{{ cis_purge_apt_ftp }}"
   tags:
     - level1-server
     - level1-workstation

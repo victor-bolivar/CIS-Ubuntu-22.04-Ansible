@@ -98,7 +98,7 @@
       package:
         name: prelink
         state: absent
-        purge: "{{ cis_purge_apt }}"
+        purge: "{{ cis_purge_apt_prelink }}"
   when:
     - "'prelink' in ansible_facts.packages"
   tags:
@@ -125,7 +125,7 @@
       package:
         name: apport
         state: absent
-        purge: "{{ cis_purge_apt }}"
+        purge: "{{ cis_purge_apt_apport }}"
       when:
         - "'apport' in ansible_facts.packages"
   tags:

@@ -1,5 +1,4 @@
 ---
-
 ## Reboot system before audit
 # System will reboot if false, can give better audit results
 skip_reboot: true
@@ -111,9 +110,45 @@ cis_ipv6_required: false
 cis_desktop_required: false
 
 ## Purge apt packages
-# This will allow the purging of any packages that are marked to be removed
-# This will also purge any packages not removed via this playbook
-cis_purge_apt: false
+# This will allow the purging of packages that are marked to be removed
+# 1.5.x
+cis_purge_apt_prelink: false
+cis_purge_apt_apport: false
+# 2.1.x
+cis_purge_apt_autofs: false
+cis_purge_apt_avahi: false
+cis_purge_apt_dhcp: false
+cis_purge_apt_bind9: false
+cis_purge_apt_dnsmasq: false
+cis_purge_apt_vsftpd: false
+cis_purge_apt_sldap: false
+cis_purge_apt_imapd: false
+cis_purge_apt_pop3d: false
+cis_purge_apt_nfs: false
+cis_purge_apt_ypserv: false
+cis_purge_apt_cups: false
+cis_purge_apt_rpcbind: false
+cis_purge_apt_rsync: false
+cis_purge_apt_samba: false
+cis_purge_apt_snmpd: false
+cis_purge_apt_tftpd: false
+cis_purge_apt_squid: false
+cis_purge_apt_apache2: false
+cis_purge_apt_nginx: false
+cis_purge_apt_xinetd: false
+cis_purge_apt_xserver: false
+# 2.2.x
+cis_purge_apt_nis: false
+cis_purge_apt_rsh: false
+cis_purge_apt_talk: false
+cis_purge_apt_telnet: false
+cis_purge_apt_ldap: false
+cis_purge_apt_ftp: false
+# 3.1.3
+cis_purge_apt_bluez: false
+# 4.3.x
+cis_purge_apt_nftables: false
+cis_purge_apt_ufw: false
 
 ##
 ## Section 1 Control Variables
@@ -137,9 +172,9 @@ cis_upgrade_dist: true
 # HAVING THAT PW EXPOSED IN RAW TEXT IS NOT SECURE!!!!
 cis_grub_user: root
 cis_set_grub_user_pass: false
-cis_grub_user_passwd: '$y$j9T$MBA5l/tQyWifM869nQjsi.$cTy0ConcNjIYOn6Cppo5NAky20osrkRxz4fEWA8xac6'  # Set to changeme
+cis_grub_user_passwd: "$y$j9T$MBA5l/tQyWifM869nQjsi.$cTy0ConcNjIYOn6Cppo5NAky20osrkRxz4fEWA8xac6" # Set to changeme
 cis_grub_user_file: /etc/grub.d/00_user
-cis_bootloader_password_hash: "grub.pbkdf2.sha512.changethispassword"  # pragma: allowlist secret
+cis_bootloader_password_hash: "grub.pbkdf2.sha512.changethispassword" # pragma: allowlist secret
 cis_set_boot_pass: false
 cis_grub_file: /boot/grub/grub.cfg
 
@@ -171,7 +206,7 @@ cis_apparmor_mode: complain
 # Noe that the banner text must not contain the below items in order to be
 # compliant with CIS: \m, \r, \s, \v or references to the OS platform
 cis_warning_banner: |
-        Authorized uses only. All activity may be monitored and reported.
+  Authorized uses only. All activity may be monitored and reported.
 
 # Controls 1.6.x - This variable governs whether dynamic motd is disabled (as required by control 1.7.1)
 cis_disable_dynamic_motd: true
@@ -204,20 +239,20 @@ cis_time_sync_tool: "ntp"
 # The default setting for the `options` is `iburst maxsources 4` -- please refer to the documentation
 # of the time synchronization mechanism you are using.
 cis_time_pool:
-- name: time.nist.gov
-  options: iburst maxsources 4
+  - name: time.nist.gov
+    options: iburst maxsources 4
 # The following variable represents a list of of time servers used
 # for configuring chrony, timesyncd, and ntp.
 # Each list item contains two settings, `name` (the domain name of the server) and synchronization `options`.
 # The default setting for the `options` is `iburst` -- please refer to the documentation
 # of the time synchronization mechanism you are using.
 cis_time_servers:
-- name: time-a-g.nist.gov
-  options: iburst
-- name: time-b-g.nist.gov
-  options: iburst
-- name: time-c-g.nist.gov
-  options: iburst
+  - name: time-a-g.nist.gov
+    options: iburst
+  - name: time-b-g.nist.gov
+    options: iburst
+  - name: time-c-g.nist.gov
+    options: iburst
 
 ##
 ## Section 3 Control Variables
@@ -250,8 +285,8 @@ cis_save_iptables_cis_rules: false
 cis_ufw_use_sysctl: true
 ## Control 4.1.x - Ensure ufw outbound connections are configured
 firewall_list_of_ports_to_allow:
-# SSHD
-- { rule: "allow", port: "22", proto: "tcp" }
+  # SSHD
+  - { rule: "allow", port: "22", proto: "tcp" }
 firewall_allow_keep_alive: true
 
 ## Controls 4.2.x - nftables
@@ -270,22 +305,22 @@ firewall_allow_keep_alive: true
 cis_ssh_root_login_ips: None
 cis_sshd_default_log_level: "INFO"
 cis_sshd_default_ciphers:
-- aes256-gcm@openssh.com
-- aes128-gcm@openssh.com
-- aes256-ctr
-- aes192-ctr
-- aes128-ctr
+  - aes256-gcm@openssh.com
+  - aes128-gcm@openssh.com
+  - aes256-ctr
+  - aes192-ctr
+  - aes128-ctr
 cis_sshd_default_macs:
-- hmac-sha2-512
-- hmac-sha2-256
+  - hmac-sha2-512
+  - hmac-sha2-256
 cis_sshd_default_kex_algorithms:
-- diffie-hellman-group14-sha256
-- diffie-hellman-group16-sha512
-- diffie-hellman-group18-sha512
-- ecdh-sha2-nistp521
-- ecdh-sha2-nistp384
-- ecdh-sha2-nistp256
-- diffie-hellman-group-exchange-sha256
+  - diffie-hellman-group14-sha256
+  - diffie-hellman-group16-sha512
+  - diffie-hellman-group18-sha512
+  - ecdh-sha2-nistp521
+  - ecdh-sha2-nistp384
+  - ecdh-sha2-nistp256
+  - diffie-hellman-group-exchange-sha256
 cis_sshd_default_max_auth_tries: 4
 cis_sshd_default_max_sessions: 8
 cis_sshd_default_login_grace_time: 60
@@ -373,22 +408,22 @@ cis_sugroup: nosugroup
 ## Control 5.3.x
 # This variable allows us to use either
 #
-cis_pwquality_minlen: '14'
+cis_pwquality_minlen: "14"
 cis_pwquality:
-- key: 'minclass'
-  value: '4'
-- key: 'dcredit'
-  value: '-1'
-- key: 'ucredit'
-  value: '-1'
-- key: 'ocredit'
-  value: '-1'
-- key: 'lcredit'
-  value: '-1'
-cis_pwquality_maxrepeat: '3'
-cis_pwquality_maxsequence: '3'
-cis_pwquality_dictcheck: '1'
-cis_pwquality_enforcing: '1'
+  - key: "minclass"
+    value: "4"
+  - key: "dcredit"
+    value: "-1"
+  - key: "ucredit"
+    value: "-1"
+  - key: "ocredit"
+    value: "-1"
+  - key: "lcredit"
+    value: "-1"
+cis_pwquality_maxrepeat: "3"
+cis_pwquality_maxsequence: "3"
+cis_pwquality_dictcheck: "1"
+cis_pwquality_enforcing: "1"
 
 # This variable represents the number of password change cycles, after which
 # a user can re-use a password.
@@ -400,17 +435,17 @@ cis_pamd_pwhistory_remember: 24
 ## If using external auth providers this will be very different
 cis_allow_common_auth_rewrite: false
 cis_faillock_config: |
-    auth       required pam_faillock.so preauth
-    auth       [success=1 default=ignore] pam_unix.so nullok
-    auth       [default=die] pam_faillock.so authfail
-    auth       sufficient pam_faillock.so authsucc
+  auth       required pam_faillock.so preauth
+  auth       [success=1 default=ignore] pam_unix.so nullok
+  auth       [default=die] pam_faillock.so authfail
+  auth       sufficient pam_faillock.so authsucc
 
 ## 5.4.2.6
 cis_root_umask: "0027"
 
 ## Control 5.3.3.4.3 , 5.4.1.4
 # cis_passwd_hash_algo is the hashing algorithm used
-cis_passwd_hash_algo: yescrypt  # pragma: allowlist secret
+cis_passwd_hash_algo: yescrypt # pragma: allowlist secret
 # Set pam as well as login defs if PAM is required
 cis_passwd_setpam_hash_algo: false
 
@@ -430,12 +465,12 @@ cis_pass:
   inactive: 30
 # The changes above are set configure via two methods: /etc/login.defs and the chage command.
 # For the latter scenario, you need to specify the list OS users in the following variable:
-chage_list_of_users: ['ubuntu']
+chage_list_of_users: ["ubuntu"]
 
 ## Control 5.4.3.3 - Default user mask
 # The following variable specifies the "umask" to set in the `/etc/bash.bashrc` and `/etc/profile`.
 # The value needs to be `027` or more restrictive to comply with CIS standards
-cis_bash_umask: '027'
+cis_bash_umask: "027"
 
 ## Control 5.4.3.2 - Configuring user shell timeout
 # This dictionary is related to ensuring the rule about user shell timeout
@@ -477,7 +512,7 @@ cis_aide_cron:
   cron_file: /etc/cron.d/aide_cron
   # This variable represents the actual command or script that the cron job
   # will execute for running AIDE.
-  aide_job: '/usr/bin/aide --config /etc/aide/aide.conf --check'
+  aide_job: "/usr/bin/aide --config /etc/aide/aide.conf --check"
   # These variables define the schedule for the cron job
   # This variable governs the minute of the time of day when the AIDE cronjob is run.
   # It must be in the range `0-59`.
@@ -489,17 +524,17 @@ cis_aide_cron:
   # `*` signifies that the job is run on all days; furthermore, specific days
   # can be given in the range `1-31`; several days can be concatenated with a comma.
   # The specified day(s) can must be in the range  `1-31`.
-  aide_day: '*'
+  aide_day: "*"
   # This variable governs months when the AIDE cronjob is run.
   # `*` signifies that the job is run in every month; furthermore, specific months
   # can be given in the range `1-12`; several months can be concatenated with commas.
   # The specified month(s) can must be in the range  `1-12`.
-  aide_month: '*'
+  aide_month: "*"
   # This variable governs the weekdays, when the AIDE cronjob is run.
   # `*` signifies that the job is run on all weekdays; furthermore, specific weekdays
   # can be given in the range `0-7` (both `0` and `7` represent Sunday); several weekdays
   # can be concatenated with commas.
-  aide_weekday: '*'
+  aide_weekday: "*"
 
 ## 6.2.1.2.2
 # This variable specifies the address of the remote log host where logs are being sent.
@@ -519,7 +554,7 @@ cis_journal_servercertificatefile:
 # of certificate authorities (CAs) that the client trusts. These trusted certificates are used
 # to validate the authenticity of the remote server's certificate.
 cis_journal_trustedcertificatefile:
-## 6.2.1.1.3 
+## 6.2.1.1.3
 # These variable specifies how much disk space the journal may use up at most
 # Specify values in bytes or use K, M, G, T, P, E as units for the specified sizes.
 # See https://www.freedesktop.org/software/systemd/man/journald.conf.html for more information.

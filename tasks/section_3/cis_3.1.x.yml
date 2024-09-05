@@ -105,7 +105,7 @@
       apt:
         name: bluez
         state: absent
-        purge: "{{ cis_purge_apt }}"
+        purge: "{{ cis_purge_apt_bluez }}"
   tags:
     - level1-server
     - level2-workstation
