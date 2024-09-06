@@ -401,9 +401,10 @@ cis_sudo_logfile: "/var/log/sudo.log"
 # command within the specified time period. CIS requires a value of at most 15 minutes.
 cis_sudo_timestamp_timeout: 15
 # This variable determines the group of users that are allowed to use the su command.
-# one to specify a user group that is allowed to use the "su" command.
-# CIS requires that such a group be created (named according to site policy) and be kept empty.
+# The playbook will ensure that the group exists and is empty before adding the users
+# specified in cis_sugroup_users_to_add
 cis_sugroup: nosugroup
+cis_sugroup_users_to_add: ["whitestack", "ubuntu"]
 
 ## Control 5.3.x
 # This variable allows us to use either
